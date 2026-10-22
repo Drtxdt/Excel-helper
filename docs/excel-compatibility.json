@@ -1,0 +1,3350 @@
+{
+  "note": "本文件为待执行的真实 Excel 对照样例。引擎测试不等于 Excel 实测。请在 Excel 中按 sheets 写入原始数据，再输入 formulas，核对 expected 和各组 variants。",
+  "dateSystem": "1900",
+  "engine": "Univer 1.2.0",
+  "checks": [
+    {
+      "lessonId": "01",
+      "topic": "等号与运算",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              null
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              null
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=3*15"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 45
+        }
+      ],
+      "variants": []
+    },
+    {
+      "lessonId": "02",
+      "topic": "单元格引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              null
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              null
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*C2"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 45
+        }
+      ],
+      "variants": [
+        {
+          "name": "多来两箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 5
+            }
+          ],
+          "expected": {
+            "main!D2": 75
+          }
+        },
+        {
+          "name": "换一个单价",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 8
+            }
+          ],
+          "expected": {
+            "main!D2": 24
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "03",
+      "topic": "括号与百分比",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "应付",
+              null,
+              "折扣",
+              "配送费"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              null,
+              null,
+              0.9,
+              6
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*C2*F2+G2"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 46.5
+        }
+      ],
+      "variants": [
+        {
+          "name": "折扣八折",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "F2",
+              "value": 0.8
+            }
+          ],
+          "expected": {
+            "main!D2": 42
+          }
+        },
+        {
+          "name": "配送费上涨",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "G2",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!D2": 50.5
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "04",
+      "topic": "ROUND 与金额",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "米数",
+              "每米价格",
+              "金额"
+            ],
+            [
+              "绳子",
+              3,
+              2.335,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=ROUND(B2*C2,2)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 7.01
+        }
+      ],
+      "variants": [
+        {
+          "name": "换成七米",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 7
+            }
+          ],
+          "expected": {
+            "main!D2": 16.35
+          }
+        },
+        {
+          "name": "调整价格",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 2.341
+            }
+          ],
+          "expected": {
+            "main!D2": 7.02
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "05",
+      "topic": "第一份综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              null
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              null
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              null
+            ],
+            [
+              "合计",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*C2",
+        "main!D3": "=B3*C3",
+        "main!D4": "=B4*C4",
+        "main!D5": "=D2+D3+D4"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 45
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 32
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 30
+        },
+        {
+          "sheet": "main",
+          "cell": "D5",
+          "value": 107
+        }
+      ],
+      "variants": [
+        {
+          "name": "胶带翻倍",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 8
+            }
+          ],
+          "expected": {
+            "main!D3": 64,
+            "main!D5": 139
+          }
+        },
+        {
+          "name": "纸箱涨价",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C4",
+              "value": 7
+            }
+          ],
+          "expected": {
+            "main!D4": 42,
+            "main!D5": 119
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "06",
+      "topic": "区域引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              45
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              32
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              30
+            ],
+            [
+              "绳子",
+              2,
+              12,
+              24
+            ],
+            [
+              "合计",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D6": "=SUM(D2:D5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D6",
+          "value": 131
+        }
+      ],
+      "variants": [
+        {
+          "name": "最后一行增加",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "D5",
+              "value": 48
+            }
+          ],
+          "expected": {
+            "main!D6": 155
+          }
+        },
+        {
+          "name": "中间一行变零",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "D3",
+              "value": 0
+            }
+          ],
+          "expected": {
+            "main!D6": 99
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "07",
+      "topic": "相对引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              null
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              null
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*C2",
+        "main!D3": "=B3*C3",
+        "main!D4": "=B4*C4"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 45
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 32
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 30
+        }
+      ],
+      "variants": [
+        {
+          "name": "第二行数量变化",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 9
+            }
+          ],
+          "expected": {
+            "main!D3": 72
+          }
+        },
+        {
+          "name": "第三行单价变化",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C4",
+              "value": 9
+            }
+          ],
+          "expected": {
+            "main!D4": 54
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "08",
+      "topic": "绝对引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "箱数",
+              null,
+              "运费",
+              null,
+              "每箱运费"
+            ],
+            [
+              "手套",
+              3,
+              null,
+              null,
+              null,
+              2
+            ],
+            [
+              "胶带",
+              4,
+              null,
+              null
+            ],
+            [
+              "纸箱",
+              6,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*$F$2",
+        "main!D3": "=B3*$F$2",
+        "main!D4": "=B4*$F$2"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 6
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 8
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 12
+        }
+      ],
+      "variants": [
+        {
+          "name": "运费改为三元",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "F2",
+              "value": 3
+            }
+          ],
+          "expected": {
+            "main!D2": 9,
+            "main!D3": 12,
+            "main!D4": 18
+          }
+        },
+        {
+          "name": "第一项改为五箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 5
+            }
+          ],
+          "expected": {
+            "main!D2": 10
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "09",
+      "topic": "混合引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "箱数 / 单价",
+              2,
+              3,
+              5
+            ],
+            [
+              3,
+              null,
+              null,
+              null
+            ],
+            [
+              4,
+              null,
+              null,
+              null
+            ],
+            [
+              6,
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=$A2*B$1",
+        "main!B3": "=$A3*B$1",
+        "main!B4": "=$A4*B$1",
+        "main!C2": "=$A2*C$1",
+        "main!C3": "=$A3*C$1",
+        "main!C4": "=$A4*C$1",
+        "main!D2": "=$A2*D$1",
+        "main!D3": "=$A3*D$1",
+        "main!D4": "=$A4*D$1"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": 6
+        },
+        {
+          "sheet": "main",
+          "cell": "C2",
+          "value": 9
+        },
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 15
+        },
+        {
+          "sheet": "main",
+          "cell": "B3",
+          "value": 8
+        },
+        {
+          "sheet": "main",
+          "cell": "C3",
+          "value": 12
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 20
+        },
+        {
+          "sheet": "main",
+          "cell": "B4",
+          "value": 12
+        },
+        {
+          "sheet": "main",
+          "cell": "C4",
+          "value": 18
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 30
+        }
+      ],
+      "variants": [
+        {
+          "name": "第二档单价变化",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C1",
+              "value": 4
+            }
+          ],
+          "expected": {
+            "main!C2": 12,
+            "main!C3": 16,
+            "main!C4": 24
+          }
+        },
+        {
+          "name": "第二档箱数变化",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A3",
+              "value": 5
+            }
+          ],
+          "expected": {
+            "main!B3": 10,
+            "main!C3": 15,
+            "main!D3": 25
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "10",
+      "topic": "跨工作表引用",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              null,
+              "金额"
+            ],
+            [
+              "手套",
+              3,
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "prices",
+          "name": "价格",
+          "rows": [
+            [
+              "物资",
+              "单价"
+            ],
+            [
+              "手套",
+              15
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*'价格'!B2"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 45
+        }
+      ],
+      "variants": [
+        {
+          "name": "供应商调价",
+          "changes": [
+            {
+              "sheet": "prices",
+              "cell": "B2",
+              "value": 18
+            }
+          ],
+          "expected": {
+            "main!D2": 54
+          }
+        },
+        {
+          "name": "订单数量增加",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 7
+            }
+          ],
+          "expected": {
+            "main!D2": 105
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "11",
+      "topic": "SUM",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存"
+            ],
+            [
+              "手套",
+              12
+            ],
+            [
+              "胶带",
+              8
+            ],
+            [
+              "纸箱",
+              20
+            ],
+            [
+              "绳子",
+              0
+            ],
+            [
+              "结果",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B6": "=SUM(B2:B5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B6",
+          "value": 40
+        }
+      ],
+      "variants": [
+        {
+          "name": "补进手套",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 17
+            }
+          ],
+          "expected": {
+            "main!B6": 45
+          }
+        },
+        {
+          "name": "补齐末行库存",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 0
+            },
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": 5
+            }
+          ],
+          "expected": {
+            "main!B6": 37
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "12",
+      "topic": "AVERAGE",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存"
+            ],
+            [
+              "手套",
+              12
+            ],
+            [
+              "胶带",
+              8
+            ],
+            [
+              "纸箱",
+              20
+            ],
+            [
+              "绳子",
+              0
+            ],
+            [
+              "结果",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B6": "=AVERAGE(B2:B5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B6",
+          "value": 10
+        }
+      ],
+      "variants": [
+        {
+          "name": "第四项尚未盘点",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": null
+            }
+          ],
+          "expected": {
+            "main!B6": 13.333333333333334
+          }
+        },
+        {
+          "name": "手套减少",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 4
+            }
+          ],
+          "expected": {
+            "main!B6": 8
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "13",
+      "topic": "MIN / MAX",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存"
+            ],
+            [
+              "手套",
+              12
+            ],
+            [
+              "胶带",
+              8
+            ],
+            [
+              "纸箱",
+              20
+            ],
+            [
+              "绳子",
+              0
+            ],
+            [
+              "结果",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=MIN(B2:B5)",
+        "main!D3": "=MAX(B2:B5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 0
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 20
+        }
+      ],
+      "variants": [
+        {
+          "name": "绳子补到三十",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": 30
+            }
+          ],
+          "expected": {
+            "main!D2": 8,
+            "main!D3": 30
+          }
+        },
+        {
+          "name": "胶带变成最低",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 2
+            },
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": 3
+            }
+          ],
+          "expected": {
+            "main!D2": 2
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "14",
+      "topic": "COUNT / COUNTA",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存"
+            ],
+            [
+              "手套",
+              12
+            ],
+            [
+              "胶带",
+              "待核实"
+            ],
+            [
+              "纸箱",
+              null
+            ],
+            [
+              "绳子",
+              0
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=COUNT(B2:B5)",
+        "main!D3": "=COUNTA(B2:B5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 2
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 3
+        }
+      ],
+      "variants": [
+        {
+          "name": "待核实变成数字",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 8
+            }
+          ],
+          "expected": {
+            "main!D2": 3
+          }
+        },
+        {
+          "name": "补上漏记物资",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 5
+            }
+          ],
+          "expected": {
+            "main!D2": 3,
+            "main!D3": 4
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "15",
+      "topic": "盘点综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存"
+            ],
+            [
+              "手套",
+              12
+            ],
+            [
+              "胶带",
+              8
+            ],
+            [
+              "纸箱",
+              20
+            ],
+            [
+              "绳子",
+              0
+            ],
+            [
+              "结果",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=SUM(B2:B5)",
+        "main!D3": "=AVERAGE(B2:B5)",
+        "main!D4": "=MIN(B2:B5)",
+        "main!D5": "=MAX(B2:B5)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 40
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 10
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 0
+        },
+        {
+          "sheet": "main",
+          "cell": "D5",
+          "value": 20
+        }
+      ],
+      "variants": [
+        {
+          "name": "全部增加一箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 13
+            },
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 9
+            },
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 21
+            },
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": 1
+            }
+          ],
+          "expected": {
+            "main!D2": 44,
+            "main!D3": 11,
+            "main!D4": 1,
+            "main!D5": 21
+          }
+        },
+        {
+          "name": "大量补充纸箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 100
+            }
+          ],
+          "expected": {
+            "main!D2": 120,
+            "main!D3": 30,
+            "main!D5": 100
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "16",
+      "topic": "IF",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存",
+              "建议"
+            ],
+            [
+              "手套",
+              12,
+              null
+            ],
+            [
+              "胶带",
+              8,
+              null
+            ],
+            [
+              "纸箱",
+              10,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C2": "=IF(B2<10,\"补货\",\"够用\")",
+        "main!C3": "=IF(B3<10,\"补货\",\"够用\")",
+        "main!C4": "=IF(B4<10,\"补货\",\"够用\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C2",
+          "value": "够用"
+        },
+        {
+          "sheet": "main",
+          "cell": "C3",
+          "value": "补货"
+        },
+        {
+          "sheet": "main",
+          "cell": "C4",
+          "value": "够用"
+        }
+      ],
+      "variants": [
+        {
+          "name": "边界向下一件",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 9
+            }
+          ],
+          "expected": {
+            "main!C4": "补货"
+          }
+        },
+        {
+          "name": "胶带补足",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B3",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!C3": "够用"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "17",
+      "topic": "AND / OR",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存",
+              "在途",
+              "需求",
+              "立即补货",
+              "关注"
+            ],
+            [
+              "手套",
+              8,
+              0,
+              25,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!E2": "=AND(B2<10,C2=0)",
+        "main!F2": "=OR(B2<10,D2>20)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "E2",
+          "value": true
+        },
+        {
+          "sheet": "main",
+          "cell": "F2",
+          "value": true
+        }
+      ],
+      "variants": [
+        {
+          "name": "货物已经在路上",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 6
+            }
+          ],
+          "expected": {
+            "main!E2": false
+          }
+        },
+        {
+          "name": "库存和需求都正常",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 15
+            },
+            {
+              "sheet": "main",
+              "cell": "D2",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!E2": false,
+            "main!F2": false
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "18",
+      "topic": "空值与比较",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存",
+              "情况"
+            ],
+            [
+              "手套",
+              null,
+              null
+            ],
+            [
+              "胶带",
+              0,
+              null
+            ],
+            [
+              "纸箱",
+              12,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C2": "=IF(B2=\"\",\"待盘点\",IF(B2=0,\"缺货\",\"有货\"))",
+        "main!C3": "=IF(B3=\"\",\"待盘点\",IF(B3=0,\"缺货\",\"有货\"))",
+        "main!C4": "=IF(B4=\"\",\"待盘点\",IF(B4=0,\"缺货\",\"有货\"))"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C2",
+          "value": "待盘点"
+        },
+        {
+          "sheet": "main",
+          "cell": "C3",
+          "value": "缺货"
+        },
+        {
+          "sheet": "main",
+          "cell": "C4",
+          "value": "有货"
+        }
+      ],
+      "variants": [
+        {
+          "name": "完成首次盘点",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 7
+            }
+          ],
+          "expected": {
+            "main!C2": "有货"
+          }
+        },
+        {
+          "name": "第三项耗尽",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 0
+            }
+          ],
+          "expected": {
+            "main!C4": "缺货"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "19",
+      "topic": "IFERROR",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存",
+              "日耗",
+              "可用天数"
+            ],
+            [
+              "手套",
+              12,
+              3,
+              null
+            ],
+            [
+              "绳子",
+              10,
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=IFERROR(B2/C2,\"暂无消耗\")",
+        "main!D3": "=IFERROR(B3/C3,\"暂无消耗\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 4
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": "暂无消耗"
+        }
+      ],
+      "variants": [
+        {
+          "name": "绳子开始消耗",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C3",
+              "value": 2
+            }
+          ],
+          "expected": {
+            "main!D3": 5
+          }
+        },
+        {
+          "name": "手套暂无消耗",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 0
+            }
+          ],
+          "expected": {
+            "main!D2": "暂无消耗"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "20",
+      "topic": "判断综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "库存",
+              "在途",
+              "建议"
+            ],
+            [
+              "手套",
+              8,
+              0,
+              null
+            ],
+            [
+              "胶带",
+              5,
+              4,
+              null
+            ],
+            [
+              "纸箱",
+              20,
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=IF(B2<10,IF(C2=0,\"立即补货\",\"等待到货\"),\"够用\")",
+        "main!D3": "=IF(B3<10,IF(C3=0,\"立即补货\",\"等待到货\"),\"够用\")",
+        "main!D4": "=IF(B4<10,IF(C4=0,\"立即补货\",\"等待到货\"),\"够用\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": "立即补货"
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": "等待到货"
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": "够用"
+        }
+      ],
+      "variants": [
+        {
+          "name": "手套有在途",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 6
+            }
+          ],
+          "expected": {
+            "main!D2": "等待到货"
+          }
+        },
+        {
+          "name": "纸箱变少",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 9
+            }
+          ],
+          "expected": {
+            "main!D4": "立即补货"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "21",
+      "topic": "TRIM",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "原始名称",
+              "整理后"
+            ],
+            [
+              "  手套  ",
+              null
+            ],
+            [
+              "   Packing   Tape  ",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=TRIM(A2)",
+        "main!B3": "=TRIM(A3)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": "手套"
+        },
+        {
+          "sheet": "main",
+          "cell": "B3",
+          "value": "Packing Tape"
+        }
+      ],
+      "variants": [
+        {
+          "name": "名称换成胶带",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "  胶带 "
+            }
+          ],
+          "expected": {
+            "main!B2": "胶带"
+          }
+        },
+        {
+          "name": "多单词名称",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A3",
+              "value": "  Red   Paper   Box  "
+            }
+          ],
+          "expected": {
+            "main!B3": "Red Paper Box"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "22",
+      "topic": "VALUE",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "导入数量",
+              "数值"
+            ],
+            [
+              "12",
+              null
+            ],
+            [
+              "8.5",
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=VALUE(A2)",
+        "main!B3": "=VALUE(A3)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": 12
+        },
+        {
+          "sheet": "main",
+          "cell": "B3",
+          "value": 8.5
+        }
+      ],
+      "variants": [
+        {
+          "name": "数量变为三十",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "30"
+            }
+          ],
+          "expected": {
+            "main!B2": 30
+          }
+        },
+        {
+          "name": "小数变动",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A3",
+              "value": "2.75"
+            }
+          ],
+          "expected": {
+            "main!B3": 2.75
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "23",
+      "topic": "LEFT / MID / RIGHT",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "货号",
+              "区域",
+              "序号",
+              "批次"
+            ],
+            [
+              "WH-123-A",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=LEFT(A2,2)",
+        "main!C2": "=MID(A2,4,3)",
+        "main!D2": "=RIGHT(A2,1)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": "WH"
+        },
+        {
+          "sheet": "main",
+          "cell": "C2",
+          "value": "123"
+        },
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": "A"
+        }
+      ],
+      "variants": [
+        {
+          "name": "新区域和批次",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "EA-007-B"
+            }
+          ],
+          "expected": {
+            "main!B2": "EA",
+            "main!C2": "007",
+            "main!D2": "B"
+          }
+        },
+        {
+          "name": "另一张货单",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "NW-905-C"
+            }
+          ],
+          "expected": {
+            "main!B2": "NW",
+            "main!C2": "905",
+            "main!D2": "C"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "24",
+      "topic": "DATE",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "年",
+              "月",
+              "日",
+              "日期值"
+            ],
+            [
+              2026,
+              10,
+              22,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=DATE(A2,B2,C2)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 46317
+        }
+      ],
+      "variants": [
+        {
+          "name": "下一天",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 23
+            }
+          ],
+          "expected": {
+            "main!D2": 46318
+          }
+        },
+        {
+          "name": "下一年元旦",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": 2027
+            },
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": 1
+            },
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 1
+            }
+          ],
+          "expected": {
+            "main!D2": 46388
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "25",
+      "topic": "清洗综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "原名称",
+              "名称",
+              "原数量",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "  手套 ",
+              null,
+              "12",
+              null,
+              15,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=TRIM(A2)",
+        "main!D2": "=VALUE(C2)",
+        "main!F2": "=D2*E2"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": "手套"
+        },
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 12
+        },
+        {
+          "sheet": "main",
+          "cell": "F2",
+          "value": 180
+        }
+      ],
+      "variants": [
+        {
+          "name": "改进货数量",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": "7"
+            }
+          ],
+          "expected": {
+            "main!D2": 7,
+            "main!F2": 105
+          }
+        },
+        {
+          "name": "换一种商品",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": " 胶带  "
+            },
+            {
+              "sheet": "main",
+              "cell": "E2",
+              "value": 8
+            }
+          ],
+          "expected": {
+            "main!B2": "胶带",
+            "main!F2": 96
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "26",
+      "topic": "XLOOKUP 精确查找",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "要查的货号",
+              "结果"
+            ],
+            [
+              "G02",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带",
+              8
+            ],
+            [
+              "G03",
+              "纸箱",
+              5
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=XLOOKUP(A2,'商品'!A2:A4,'商品'!C2:C4)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": 8
+        }
+      ],
+      "variants": [
+        {
+          "name": "查询手套",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G01"
+            }
+          ],
+          "expected": {
+            "main!B2": 15
+          }
+        },
+        {
+          "name": "查询纸箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G03"
+            }
+          ],
+          "expected": {
+            "main!B2": 5
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "27",
+      "topic": "XLOOKUP 未匹配项",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "要查的货号",
+              "结果"
+            ],
+            [
+              "G99",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带",
+              8
+            ],
+            [
+              "G03",
+              "纸箱",
+              5
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=XLOOKUP(A2,'商品'!A2:A4,'商品'!C2:C4,\"未登记\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": "未登记"
+        }
+      ],
+      "variants": [
+        {
+          "name": "换成已有商品",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G02"
+            }
+          ],
+          "expected": {
+            "main!B2": 8
+          }
+        },
+        {
+          "name": "另一个未知货号",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "X00"
+            }
+          ],
+          "expected": {
+            "main!B2": "未登记"
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "28",
+      "topic": "重复键",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "要查的货号",
+              "结果"
+            ],
+            [
+              "G02",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带旧记录",
+              8
+            ],
+            [
+              "G02",
+              "胶带新记录",
+              9
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=XLOOKUP(A2,'商品'!A2:A4,'商品'!C2:C4)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": 8
+        }
+      ],
+      "variants": [
+        {
+          "name": "首条记录变价",
+          "changes": [
+            {
+              "sheet": "catalog",
+              "cell": "C3",
+              "value": 7
+            }
+          ],
+          "expected": {
+            "main!B2": 7
+          }
+        },
+        {
+          "name": "查询唯一的货号",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G01"
+            }
+          ],
+          "expected": {
+            "main!B2": 15
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "29",
+      "topic": "VLOOKUP 精确查找",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "要查的货号",
+              "结果"
+            ],
+            [
+              "G02",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带",
+              8
+            ],
+            [
+              "G03",
+              "纸箱",
+              5
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=VLOOKUP(A2,'商品'!A2:C4,3,FALSE)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": 8
+        }
+      ],
+      "variants": [
+        {
+          "name": "查手套",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G01"
+            }
+          ],
+          "expected": {
+            "main!B2": 15
+          }
+        },
+        {
+          "name": "价格改动",
+          "changes": [
+            {
+              "sheet": "catalog",
+              "cell": "C3",
+              "value": 11
+            }
+          ],
+          "expected": {
+            "main!B2": 11
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "30",
+      "topic": "查找综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "货号",
+              "数量",
+              "单价",
+              "金额"
+            ],
+            [
+              "G02",
+              4,
+              null,
+              null
+            ],
+            [
+              "G01",
+              3,
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带",
+              8
+            ],
+            [
+              "G03",
+              "纸箱",
+              5
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C2": "=XLOOKUP(A2,'商品'!$A$2:$A$4,'商品'!$C$2:$C$4)",
+        "main!C3": "=XLOOKUP(A3,'商品'!$A$2:$A$4,'商品'!$C$2:$C$4)",
+        "main!D2": "=B2*C2",
+        "main!D3": "=B3*C3"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C2",
+          "value": 8
+        },
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 32
+        },
+        {
+          "sheet": "main",
+          "cell": "C3",
+          "value": 15
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 45
+        }
+      ],
+      "variants": [
+        {
+          "name": "胶带换成纸箱",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "G03"
+            }
+          ],
+          "expected": {
+            "main!C2": 5,
+            "main!D2": 20
+          }
+        },
+        {
+          "name": "手套价格调整",
+          "changes": [
+            {
+              "sheet": "catalog",
+              "cell": "C2",
+              "value": 18
+            }
+          ],
+          "expected": {
+            "main!C3": 18,
+            "main!D3": 54
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "31",
+      "topic": "SUMIF",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "地区",
+              "状态",
+              "金额",
+              "件数"
+            ],
+            [
+              "东街",
+              "已发货",
+              100,
+              2
+            ],
+            [
+              "西街",
+              "已发货",
+              60,
+              1
+            ],
+            [
+              "东街",
+              "取消",
+              40,
+              1
+            ],
+            [
+              "东街",
+              "已发货",
+              80,
+              3
+            ],
+            [
+              "西街",
+              "待发货",
+              50,
+              2
+            ],
+            [
+              "结果",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C7": "=SUMIF(A2:A6,\"东街\",C2:C6)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C7",
+          "value": 220
+        }
+      ],
+      "variants": [
+        {
+          "name": "东街金额增加",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C2",
+              "value": 120
+            }
+          ],
+          "expected": {
+            "main!C7": 240
+          }
+        },
+        {
+          "name": "一笔订单改地区",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A5",
+              "value": "西街"
+            }
+          ],
+          "expected": {
+            "main!C7": 140
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "32",
+      "topic": "COUNTIF",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "地区",
+              "状态",
+              "金额",
+              "件数"
+            ],
+            [
+              "东街",
+              "已发货",
+              100,
+              2
+            ],
+            [
+              "西街",
+              "已发货",
+              60,
+              1
+            ],
+            [
+              "东街",
+              "取消",
+              40,
+              1
+            ],
+            [
+              "东街",
+              "已发货",
+              80,
+              3
+            ],
+            [
+              "西街",
+              "待发货",
+              50,
+              2
+            ],
+            [
+              "结果",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C7": "=COUNTIF(A2:A6,\"东街\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C7",
+          "value": 3
+        }
+      ],
+      "variants": [
+        {
+          "name": "西街改东街",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A3",
+              "value": "东街"
+            }
+          ],
+          "expected": {
+            "main!C7": 4
+          }
+        },
+        {
+          "name": "东街改西街",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A2",
+              "value": "西街"
+            }
+          ],
+          "expected": {
+            "main!C7": 2
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "33",
+      "topic": "SUMIFS",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "地区",
+              "状态",
+              "金额",
+              "件数"
+            ],
+            [
+              "东街",
+              "已发货",
+              100,
+              2
+            ],
+            [
+              "西街",
+              "已发货",
+              60,
+              1
+            ],
+            [
+              "东街",
+              "取消",
+              40,
+              1
+            ],
+            [
+              "东街",
+              "已发货",
+              80,
+              3
+            ],
+            [
+              "西街",
+              "待发货",
+              50,
+              2
+            ],
+            [
+              "结果",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C7": "=SUMIFS(C2:C6,A2:A6,\"东街\",B2:B6,\"已发货\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C7",
+          "value": 180
+        }
+      ],
+      "variants": [
+        {
+          "name": "取消单恢复发货",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": "已发货"
+            }
+          ],
+          "expected": {
+            "main!C7": 220
+          }
+        },
+        {
+          "name": "发货金额调整",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "C5",
+              "value": 90
+            }
+          ],
+          "expected": {
+            "main!C7": 190
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "34",
+      "topic": "COUNTIFS",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "地区",
+              "状态",
+              "金额",
+              "件数"
+            ],
+            [
+              "东街",
+              "已发货",
+              100,
+              2
+            ],
+            [
+              "西街",
+              "已发货",
+              60,
+              1
+            ],
+            [
+              "东街",
+              "取消",
+              40,
+              1
+            ],
+            [
+              "东街",
+              "已发货",
+              80,
+              3
+            ],
+            [
+              "西街",
+              "待发货",
+              50,
+              2
+            ],
+            [
+              "结果",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!C7": "=COUNTIFS(A2:A6,\"东街\",B2:B6,\"已发货\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "C7",
+          "value": 2
+        }
+      ],
+      "variants": [
+        {
+          "name": "取消单恢复",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": "已发货"
+            }
+          ],
+          "expected": {
+            "main!C7": 3
+          }
+        },
+        {
+          "name": "一单撤回",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B2",
+              "value": "待发货"
+            }
+          ],
+          "expected": {
+            "main!C7": 1
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "35",
+      "topic": "条件统计综合任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "地区",
+              "状态",
+              "金额",
+              "件数"
+            ],
+            [
+              "东街",
+              "已发货",
+              100,
+              2
+            ],
+            [
+              "西街",
+              "已发货",
+              60,
+              1
+            ],
+            [
+              "东街",
+              "取消",
+              40,
+              1
+            ],
+            [
+              "东街",
+              "已发货",
+              80,
+              3
+            ],
+            [
+              "西街",
+              "待发货",
+              50,
+              2
+            ],
+            [
+              "结果",
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!F2": "=SUMIF(B2:B6,\"已发货\",C2:C6)",
+        "main!F3": "=SUMIFS(C2:C6,A2:A6,\"东街\",B2:B6,\"已发货\")",
+        "main!F4": "=COUNTIFS(A2:A6,\"东街\",B2:B6,\"已发货\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "F2",
+          "value": 240
+        },
+        {
+          "sheet": "main",
+          "cell": "F3",
+          "value": 180
+        },
+        {
+          "sheet": "main",
+          "cell": "F4",
+          "value": 2
+        }
+      ],
+      "variants": [
+        {
+          "name": "一单取消",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B5",
+              "value": "取消"
+            }
+          ],
+          "expected": {
+            "main!F2": 160,
+            "main!F3": 100,
+            "main!F4": 1
+          }
+        },
+        {
+          "name": "另一单转到东街",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "A3",
+              "value": "东街"
+            }
+          ],
+          "expected": {
+            "main!F3": 240,
+            "main!F4": 3
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "39",
+      "topic": "修复工作簿",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "物资",
+              "数量",
+              "单价",
+              "应付",
+              null,
+              "每单运费"
+            ],
+            [
+              "手套",
+              3,
+              15,
+              "=B2*C2+F2",
+              null,
+              6
+            ],
+            [
+              "胶带",
+              4,
+              8,
+              "=B3*C3+F3"
+            ],
+            [
+              "纸箱",
+              6,
+              5,
+              "=B4*C4+F4"
+            ],
+            [
+              "合计",
+              null,
+              null,
+              "=SUM(D2:D3)"
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!D2": "=B2*C2+$F$2",
+        "main!D3": "=B3*C3+$F$2",
+        "main!D4": "=B4*C4+$F$2",
+        "main!D5": "=SUM(D2:D4)"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 51
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 38
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 36
+        },
+        {
+          "sheet": "main",
+          "cell": "D5",
+          "value": 125
+        }
+      ],
+      "variants": [
+        {
+          "name": "运费提高",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "F2",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!D2": 55,
+            "main!D3": 42,
+            "main!D4": 40,
+            "main!D5": 137
+          }
+        },
+        {
+          "name": "纸箱订单增加",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "B4",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!D4": 56,
+            "main!D5": 145
+          }
+        }
+      ]
+    },
+    {
+      "lessonId": "40",
+      "topic": "入门结业任务",
+      "excelStatus": "待验证",
+      "excelVersion": null,
+      "verifiedAt": null,
+      "sheets": [
+        {
+          "id": "main",
+          "name": "订单",
+          "rows": [
+            [
+              "原货号",
+              "货号",
+              "数量",
+              "单价",
+              "金额",
+              "状态",
+              null,
+              "交接结果"
+            ],
+            [
+              " G01 ",
+              null,
+              3,
+              null,
+              null,
+              "已发货",
+              null,
+              null
+            ],
+            [
+              "G02  ",
+              null,
+              4,
+              null,
+              null,
+              "取消",
+              null,
+              null
+            ],
+            [
+              " G03",
+              null,
+              6,
+              null,
+              null,
+              "已发货"
+            ]
+          ]
+        },
+        {
+          "id": "catalog",
+          "name": "商品",
+          "rows": [
+            [
+              "货号",
+              "物资",
+              "单价"
+            ],
+            [
+              "G01",
+              "手套",
+              15
+            ],
+            [
+              "G02",
+              "胶带",
+              8
+            ],
+            [
+              "G03",
+              "纸箱",
+              5
+            ]
+          ]
+        }
+      ],
+      "formulas": {
+        "main!B2": "=TRIM(A2)",
+        "main!D2": "=XLOOKUP(B2,'商品'!$A$2:$A$4,'商品'!$C$2:$C$4)",
+        "main!E2": "=C2*D2",
+        "main!B3": "=TRIM(A3)",
+        "main!D3": "=XLOOKUP(B3,'商品'!$A$2:$A$4,'商品'!$C$2:$C$4)",
+        "main!E3": "=C3*D3",
+        "main!B4": "=TRIM(A4)",
+        "main!D4": "=XLOOKUP(B4,'商品'!$A$2:$A$4,'商品'!$C$2:$C$4)",
+        "main!E4": "=C4*D4",
+        "main!H2": "=SUMIF(F2:F4,\"已发货\",E2:E4)",
+        "main!H3": "=COUNTIF(F2:F4,\"已发货\")"
+      },
+      "expected": [
+        {
+          "sheet": "main",
+          "cell": "B2",
+          "value": "G01"
+        },
+        {
+          "sheet": "main",
+          "cell": "B3",
+          "value": "G02"
+        },
+        {
+          "sheet": "main",
+          "cell": "B4",
+          "value": "G03"
+        },
+        {
+          "sheet": "main",
+          "cell": "D2",
+          "value": 15
+        },
+        {
+          "sheet": "main",
+          "cell": "D3",
+          "value": 8
+        },
+        {
+          "sheet": "main",
+          "cell": "D4",
+          "value": 5
+        },
+        {
+          "sheet": "main",
+          "cell": "E2",
+          "value": 45
+        },
+        {
+          "sheet": "main",
+          "cell": "E3",
+          "value": 32
+        },
+        {
+          "sheet": "main",
+          "cell": "E4",
+          "value": 30
+        },
+        {
+          "sheet": "main",
+          "cell": "H2",
+          "value": 75
+        },
+        {
+          "sheet": "main",
+          "cell": "H3",
+          "value": 2
+        }
+      ],
+      "variants": [
+        {
+          "name": "取消单恢复",
+          "changes": [
+            {
+              "sheet": "main",
+              "cell": "F3",
+              "value": "已发货"
+            }
+          ],
+          "expected": {
+            "main!H2": 107,
+            "main!H3": 3
+          }
+        },
+        {
+          "name": "价格和数量调整",
+          "changes": [
+            {
+              "sheet": "catalog",
+              "cell": "C2",
+              "value": 18
+            },
+            {
+              "sheet": "main",
+              "cell": "C4",
+              "value": 10
+            }
+          ],
+          "expected": {
+            "main!D2": 18,
+            "main!E2": 54,
+            "main!E4": 50,
+            "main!H2": 104
+          }
+        }
+      ]
+    }
+  ]
+}

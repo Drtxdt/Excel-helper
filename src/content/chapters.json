@@ -1,0 +1,50 @@
+[
+  {
+    "number": 1,
+    "name": "第一张订单",
+    "subtitle": "从一个等号开始",
+    "icon": "receipt"
+  },
+  {
+    "number": 2,
+    "name": "公式开始搬家",
+    "subtitle": "让一条公式照顾整张表",
+    "icon": "move"
+  },
+  {
+    "number": 3,
+    "name": "仓库盘点",
+    "subtitle": "从明细里看见全貌",
+    "icon": "boxes"
+  },
+  {
+    "number": 4,
+    "name": "什么时候该补货",
+    "subtitle": "把判断交给表格",
+    "icon": "signpost"
+  },
+  {
+    "number": 5,
+    "name": "这批数据有点乱",
+    "subtitle": "先把数据收拾明白",
+    "icon": "brush"
+  },
+  {
+    "number": 6,
+    "name": "货号对得上吗",
+    "subtitle": "把两张表连接起来",
+    "icon": "link"
+  },
+  {
+    "number": 7,
+    "name": "哪些订单该算进去",
+    "subtitle": "条件说清楚，统计才靠谱",
+    "icon": "filter"
+  },
+  {
+    "number": 8,
+    "name": "独立值班",
+    "subtitle": "今天，供应站交给你",
+    "icon": "sun"
+  }
+]
