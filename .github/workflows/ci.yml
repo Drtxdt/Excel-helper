@@ -54,8 +54,11 @@ jobs:
           cache: pnpm
       - name: Install Chinese fonts
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends fonts-noto-cjk=1:20230817+repack1-3
+          # The Azure mirror has repeatedly stalled while downloading this font.
+          # Keep Ubuntu's signed package metadata and the exact font version.
+          find /etc/apt -maxdepth 2 -type f \( -name '*.sources' -o -name '*.list' \) -exec sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' {} +
+          apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=3 update
+          apt-get -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=3 install -y --no-install-recommends fonts-noto-cjk=1:20230817+repack1-3
           dpkg-query -W fonts-noto-cjk
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
