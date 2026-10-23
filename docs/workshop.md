@@ -38,13 +38,15 @@ pnpm exec playwright test --project=chromium --project=chromium-tablet --project
 
 `tests/workshop-session.test.ts` 用可控 Promise 和计时器覆盖计算等待、判题、编辑取消、重置、切关/卸载、迟到错误、修订号、超时与重试。原有课程、Excel 黄金样例、存档和浏览器回归继续执行。
 
-Linux 截图仍按固定容器、Chromium 与字体运行。此次布局和字号有意变化，需要在 Linux 生成并人工审阅新的 1024、1366、1920 基线；不使用 Windows 截图覆盖，不放宽差异阈值。
+Linux 截图仍按固定容器、Chromium 与字体运行。此次布局和字号有意变化，新的 1024、1366、1920 基线来自 CI 运行 39956995132，已逐张人工审阅；没有使用 Windows 截图覆盖或放宽差异阈值。字体下载改用 Ubuntu 官方主镜像，保留签名验证、固定版本，并设置超时与重试。
 
 ## 本地验收记录
 
 2026-10-23，Windows、Node 24、pnpm 10.33.0、Playwright 1.64.1：237 项测试与生产构建通过；20 项浏览器回归通过（桌面 14 项、Chromium 触摸 3 项、WebKit 触摸 3 项）。WebKit 为 Playwright 安装的 Windows WebKit 27.2 / 2370；不等同于 iPad Safari。Linux 的独立结果以 PR 的 quality、e2e、commit-policy 检查与报告为准。
 
 新增回归实际发现并修复了两类问题：WebKit 轻点按钮不会必然转移焦点，抽屉需要记录明确的触发按钮；迟到的表格选区通知不能覆盖地址栏正在输入的填充范围，因此输入草稿与当前选区分开保存。
+
+Linux 首轮另发现关闭抽屉后的焦点回归偶发失败。对话框现在隔离键盘事件，避免传给底层表格快捷键；新增回归确认在抽屉内按撤销不会改变作答。焦点流程在 Windows Chromium 连续执行 10 次通过。修复后原有 20 项功能回归再次通过；新增快捷键用例修正按钮定位后单独通过，合计覆盖 21 项功能用例。
 
 ## 验证边界
 
