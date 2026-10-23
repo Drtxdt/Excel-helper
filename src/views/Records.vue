@@ -2,8 +2,8 @@
 import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { Download, Upload, Check } from "lucide-vue-next";
-import { state, load } from "../state";
-import { backup, restore, previousBackup } from "../storage";
+import { state, importRecords } from "../state";
+import { backup, previousBackup } from "../storage";
 import { lessons } from "../content";
 const message = ref(""),
   file = ref<HTMLInputElement>();
@@ -26,12 +26,11 @@ async function importFile(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0];
   if (!f) return;
   try {
-    await restore(await f.text());
-    await load();
+    await importRecords(await f.text());
     message.value = "备份已恢复。导入前的记录已另存，可用下方按钮下载。";
   } catch {
     message.value =
-      "没有导入：文件格式或内容不符合学习备份要求，原有记录保留。";
+      "没有导入：文件内容、存储空间或记录版本需要检查，原有记录保留。";
   }
   (e.target as HTMLInputElement).value = "";
 }

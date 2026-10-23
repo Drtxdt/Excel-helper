@@ -19,6 +19,7 @@ import { makeWorkbook, put } from "../workbook";
 import { gradeOperation } from "../operations";
 import GradeWorker from "../grade.worker?worker";
 import { state, save, load } from "../state";
+import { passedRecord } from "../learning";
 import { exerciseLesson } from "../exercise";
 import type { GradeResult, LessonDefinition, LearningRecord } from "../types";
 const md = new MarkdownIt({ html: false });
@@ -206,15 +207,18 @@ function finish(r: GradeResult) {
   }
   result.value = r;
   if (r.status === "passed" && lesson) {
-    state.records[lesson.id] = {
-      lessonId: lesson.id,
-      lessonVersion: lesson.version,
-      completed: variant.value < 0 || !!record.value?.completed,
-      mastered:
-        (variant.value >= 0 && !usedHelp.value) || !!record.value?.mastered,
-      hintsViewed: hintCount.value,
-      updatedAt: new Date().toISOString(),
-    };
+    state.records[lesson.id] = passedRecord(
+      {
+        lessonId: lesson.id,
+        lessonVersion: lesson.version,
+        completed: !!record.value?.completed,
+        mastered: !!record.value?.mastered,
+        hintsViewed: hintCount.value,
+        updatedAt: new Date().toISOString(),
+      },
+      variant.value,
+      usedHelp.value,
+    );
   }
   void persist();
 }
