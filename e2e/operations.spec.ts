@@ -1,7 +1,8 @@
 import type { Page } from "@playwright/test";
-import { test, expect, waitSaved } from "./helpers";
+import { test, expect, waitSaved, dismissGuide } from "./helpers";
 async function open(page: Page, id: string) {
   await page.goto(`/#/lesson/${id}`);
+  await dismissGuide(page);
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),
   ).toBeEnabled();

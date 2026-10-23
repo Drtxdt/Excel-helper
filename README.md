@@ -24,6 +24,7 @@ pnpm preview
 
 - `src/content/lessons.json`：40 关的数据、任务、提示、变式、预期值、参考解法。`scripts/seed-course.mjs` 是当前内容的编写源，修改后运行 `node scripts/seed-course.mjs`。
 - `src/course-schema.ts`：课程结构校验。新增常规课程只需内容与测试，不需改工作台。
+- `src/workshop/` 与 `src/components/workshop/`：教学会话、检查取消、表格操作区与任务/帮助组件。维护与平板验收见 [工作台说明](docs/workshop.md)。
 - `src/adapter.ts`：Univer 的浏览器边界。实例不进入 Vue 响应式对象；恢复的快照先脱离代理。
 - `src/formula.worker.ts`：编辑中的公式计算。
 - `src/headless.ts`、`src/grade.ts`、`src/grade.worker.ts`：每次判题都用独立工作簿，逐份变式运行实际引擎，等结果应用后读取。预期值来自课程中独立确定的常量。

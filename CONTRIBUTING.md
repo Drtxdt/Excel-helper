@@ -14,8 +14,8 @@
 
 ```sh
 pnpm check
-pnpm exec playwright install chromium
-pnpm test:e2e
+pnpm exec playwright install chromium webkit
+pnpm exec playwright test --project=chromium --project=chromium-tablet --project=webkit-tablet
 pnpm check:commits
 ```
 
@@ -25,7 +25,7 @@ pnpm check:commits
 
 ## CI 与截图
 
-三个必需检查为 quality、e2e、commit-policy。CI 使用 Ubuntu 24.04、Playwright 1.64.1（容器按 digest 固定）、Chromium 1248，中文字体固定为 fonts-noto-cjk 1:20230817+repack1-3。`quality` 执行 pnpm check；`e2e` 测试生产构建并比较 1366×768 与 1920×1080 截图；`commit-policy` 检查提交信息。重试仍不允许将 flaky 测试算作通过。
+三个必需检查为 quality、e2e、commit-policy。CI 使用 Ubuntu 24.04、Playwright 1.64.1（容器按 digest 固定）、Chromium 1248，中文字体固定为 fonts-noto-cjk 1:20230817+repack1-3。`quality` 执行 pnpm check；`e2e` 在 Chromium 桌面及 Chromium/WebKit 平板触摸模式测试生产构建，并比较 1024×768、1366×768 与 1920×1080 截图；`commit-policy` 检查提交信息。重试仍不允许将 flaky 测试算作通过。
 
 Linux 截图保存在 e2e/__screenshots__/，只接受 CI Linux 环境生成并人工查看的基线，不用 Windows 截图替换。首次缺失基线时，Playwright 会生成候选图并让用例失败；从该运行的 screenshot-candidates artifact 下载候选图，检查后提交，再等待正常比较通过。更新已有基线时，可在独立 PR 中删除需要更新的特定基线，沿用这一流程；不能在正常 CI 中添加 --update-snapshots，也不能放宽断言掩盖回归。
 
@@ -35,4 +35,4 @@ Linux 截图保存在 e2e/__screenshots__/，只接受 CI Linux 环境生成并�
 
 ## 分阶段验证记录
 
-PR 01 建立门禁，PR 02 修复存档与学习状态一致性。PR 03 强化操作判题并建立真实 Excel 固定结果对照。新增公式或改动课程数据时，按 [Excel 对照记录](docs/excel-compatibility.md) 重新采集受影响的证据；CI 不能代替桌面 Excel 实测。
+PR 01 建立门禁，PR 02 修复存档与学习状态一致性。PR 03 强化操作判题并建立真实 Excel 固定结果对照。PR 04 拆分工作台与检查会话，完善 PC／平板操作；维护说明与实测边界见 [工作台说明](docs/workshop.md)。新增公式或改动课程数据时，按 [Excel 对照记录](docs/excel-compatibility.md) 重新采集受影响的证据；CI 不能代替桌面 Excel 实测。

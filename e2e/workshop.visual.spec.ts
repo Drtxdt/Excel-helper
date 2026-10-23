@@ -12,6 +12,7 @@ test.beforeAll(() => {
     throw Error("截图基线只能在文档指定的 Linux Playwright 容器内验证或更新。");
 });
 for (const viewport of [
+  { width: 1024, height: 768 },
   { width: 1366, height: 768 },
   { width: 1920, height: 1080 },
 ]) {
