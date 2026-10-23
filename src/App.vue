@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
 import { Package, BookOpen, Map, Archive } from "lucide-vue-next";
-import { state } from "./state";
+import { state, reloadRecords } from "./state";
 </script>
 <template>
   <div class="app-shell" :class="{ 'no-motion': !state.motion }">
@@ -21,7 +21,20 @@ import { state } from "./state";
     </header>
     <div v-if="state.storageError" class="storage-warning" role="alert">
       {{ state.storageError }} <RouterLink to="/records">导出备份</RouterLink>
+      <button
+        v-if="state.storageConflict"
+        class="text-button"
+        @click="reloadRecords"
+      >
+        重新载入已保存记录
+      </button>
     </div>
     <RouterView :key="$route.fullPath" />
   </div>
 </template>
+<style scoped>
+.storage-warning .text-button {
+  margin-left: 12px;
+  text-decoration: underline;
+}
+</style>
