@@ -1099,7 +1099,7 @@ add(
   "先看最缺的食品",
   "排序与筛选",
   "整张库存表太长，先筛出食品，再把库存少的排到前面。",
-  "通过表格下方的操作面板设置：分类仅显示“食品”，库存按升序排序。",
+  "在 A1:D6 中筛选分类，只显示食品，并按库存从小到大排列整行。保留全部原始记录。",
   [sheet(opRows)],
   [],
   {},
@@ -1111,13 +1111,27 @@ add(
   ],
   "食品记录应该按 3、8、15 的库存顺序显示。被筛掉的工具记录仍在工作簿中。",
   [],
-  { operation: { kind: "sort-filter", sheet: "main", range: "A1:D6" } },
+  {
+    version: 2,
+    operation: {
+      kind: "sort-filter",
+      sheet: "main",
+      range: "A1:D6",
+      filter: {
+        column: 1,
+        values: ["食品"],
+        choices: ["工具", "食品"],
+        label: "分类",
+      },
+      sort: { column: 2, ascending: true, label: "库存" },
+    },
+  },
 );
 add(
   "库存少了，自己亮起来",
   "条件格式",
   "低库存需要一眼看出来。数据变动后，颜色也应该跟着变。",
-  "给 C2:C6 添加“小于 10”的条件格式，使用浅红色背景。",
+  "给 C2:C6 添加“小于 10”的条件格式，使用浅红色背景（#fce0da）。",
   [sheet(opRows)],
   [],
   {},
@@ -1129,7 +1143,17 @@ add(
   ],
   "颜色来自规则，而不是写死在单元格上。修改库存后，规则会重新计算。",
   [],
-  { operation: { kind: "format", sheet: "main", range: "C2:C6" } },
+  {
+    version: 2,
+    operation: {
+      kind: "format",
+      sheet: "main",
+      range: "C2:C6",
+      operator: "lessThan",
+      threshold: 10,
+      background: "#fce0da",
+    },
+  },
 );
 add(
   "别再出现三种“已发货”",
@@ -1147,7 +1171,16 @@ add(
   ],
   "规范录入可以省掉后面的清洗工作。规则应覆盖整段数据区域，而不只是一个单元格。",
   [],
-  { operation: { kind: "validation", sheet: "main", range: "D2:D6" } },
+  {
+    version: 2,
+    operation: {
+      kind: "validation",
+      sheet: "main",
+      range: "D2:D6",
+      values: ["待发货", "已发货", "取消"],
+      rejectInvalid: true,
+    },
+  },
 );
 add(
   "这张表哪里出了问题",

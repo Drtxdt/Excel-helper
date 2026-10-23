@@ -4124,8 +4124,8 @@
     "title": "先看最缺的食品",
     "subtitle": "排序与筛选",
     "brief": "整张库存表太长，先筛出食品，再把库存少的排到前面。",
-    "goal": "通过表格下方的操作面板设置：分类仅显示“食品”，库存按升序排序。",
-    "version": 1,
+    "goal": "在 A1:D6 中筛选分类，只显示食品，并按库存从小到大排列整行。保留全部原始记录。",
+    "version": 2,
     "prerequisites": [
       "35"
     ],
@@ -4198,7 +4198,23 @@
     "operation": {
       "kind": "sort-filter",
       "sheet": "main",
-      "range": "A1:D6"
+      "range": "A1:D6",
+      "filter": {
+        "column": 1,
+        "values": [
+          "食品"
+        ],
+        "choices": [
+          "工具",
+          "食品"
+        ],
+        "label": "分类"
+      },
+      "sort": {
+        "column": 2,
+        "ascending": true,
+        "label": "库存"
+      }
     }
   },
   {
@@ -4208,8 +4224,8 @@
     "title": "库存少了，自己亮起来",
     "subtitle": "条件格式",
     "brief": "低库存需要一眼看出来。数据变动后，颜色也应该跟着变。",
-    "goal": "给 C2:C6 添加“小于 10”的条件格式，使用浅红色背景。",
-    "version": 1,
+    "goal": "给 C2:C6 添加“小于 10”的条件格式，使用浅红色背景（#fce0da）。",
+    "version": 2,
     "prerequisites": [
       "36"
     ],
@@ -4281,7 +4297,10 @@
     "operation": {
       "kind": "format",
       "sheet": "main",
-      "range": "C2:C6"
+      "range": "C2:C6",
+      "operator": "lessThan",
+      "threshold": 10,
+      "background": "#fce0da"
     }
   },
   {
@@ -4292,7 +4311,7 @@
     "subtitle": "数据验证",
     "brief": "“已发货”“已经发货”“发货了”混在一起，统计会很难受。用下拉选项统一录入。",
     "goal": "为 D2:D6 设置下拉选项：待发货、已发货、取消，并拒绝列表外输入。",
-    "version": 1,
+    "version": 2,
     "prerequisites": [
       "37"
     ],
@@ -4364,7 +4383,13 @@
     "operation": {
       "kind": "validation",
       "sheet": "main",
-      "range": "D2:D6"
+      "range": "D2:D6",
+      "values": [
+        "待发货",
+        "已发货",
+        "取消"
+      ],
+      "rejectInvalid": true
     }
   },
   {

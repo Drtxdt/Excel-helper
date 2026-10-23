@@ -26,11 +26,25 @@ export interface Solution {
   cells: Record<string, string>;
   explanation: string;
 }
-export interface OperationGoal {
-  kind: "sort-filter" | "format" | "validation";
-  sheet: string;
-  range: string;
-}
+export type OperationGoal = { sheet: string; range: string } & (
+  | {
+      kind: "sort-filter";
+      filter: {
+        column: number;
+        values: string[];
+        choices: string[];
+        label: string;
+      };
+      sort: { column: number; ascending: boolean; label: string };
+    }
+  | {
+      kind: "format";
+      operator: "lessThan";
+      threshold: number;
+      background: string;
+    }
+  | { kind: "validation"; values: string[]; rejectInvalid: boolean }
+);
 export interface LessonDefinition {
   id: string;
   number: number;

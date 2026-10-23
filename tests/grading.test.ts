@@ -2,6 +2,12 @@ import { test, expect } from "vitest";
 import { lessons } from "../src/content";
 import { grade } from "../src/grade";
 import { makeWorkbook, applySolution, put, cell } from "../src/workbook";
+import {
+  operationLesson,
+  sortState,
+  formatState,
+  validationState,
+} from "./operation-fixtures";
 import { gradeOperation } from "../src/operations";
 import { backup, parseBackup } from "../src/storage";
 import { exerciseLesson } from "../src/exercise";
@@ -55,48 +61,25 @@ test("解析函数节点而非字符串包含来检查技能", async () => {
   );
 });
 test("筛选必须保留正确行并排序", () => {
-  const s = {
-    criteria: { filters: { filters: ["食品"] } },
-    hidden: [4, 5],
-    rows: [
-      ["面包", "食品", 3],
-      ["饼干", "食品", 8],
-      ["饮水", "食品", 15],
-      ["手套", "工具", 12],
-      ["胶带", "工具", 20],
-    ],
-  };
-  expect(gradeOperation("sort-filter", s, 2).status).toBe("passed");
-  expect(gradeOperation("sort-filter", { ...s, hidden: [] }, 2).status).toBe(
-    "incorrect",
-  );
+  const l = operationLesson("36"),
+    s = sortState();
+  expect(gradeOperation(l.operation!, s, 2, l.sheets).status).toBe("passed");
+  s.hiddenRows = [];
+  expect(gradeOperation(l.operation!, s, 2, l.sheets).status).toBe("incorrect");
 });
 test("条件格式检查真实规则范围与条件", () => {
-  const s = [
-    {
-      rule: {
-        type: "highlightCell",
-        subType: "number",
-        operator: "lessThan",
-        value: 10,
-        style: { bg: { rgb: "#fce0da" } },
-      },
-      ranges: [{ startRow: 1, endRow: 5, startColumn: 2, endColumn: 2 }],
-    },
-  ];
-  expect(gradeOperation("format", s, 0).status).toBe("passed");
-  s[0].rule.value = 9;
-  expect(gradeOperation("format", s, 0).status).toBe("incorrect");
+  const l = operationLesson("37"),
+    s = formatState();
+  expect(gradeOperation(l.operation!, s, 0, l.sheets).status).toBe("passed");
+  s.rules[0].value = 9;
+  expect(gradeOperation(l.operation!, s, 0, l.sheets).status).toBe("incorrect");
 });
 test("验证规则必须拒绝无效值并覆盖五格", () => {
-  const s = Array.from({ length: 5 }, () => ({
-    type: "list",
-    options: ["待发货", "已发货", "取消"],
-    allowInvalid: false,
-  }));
-  expect(gradeOperation("validation", s, 0).status).toBe("passed");
-  s[2].allowInvalid = true;
-  expect(gradeOperation("validation", s, 0).status).toBe("incorrect");
+  const l = operationLesson("38"),
+    s = validationState();
+  expect(gradeOperation(l.operation!, s, 0, l.sheets).status).toBe("passed");
+  s.cells[2].allowInvalid = true;
+  expect(gradeOperation(l.operation!, s, 0, l.sheets).status).toBe("incorrect");
 });
 test("备份结构校验拒绝损坏与重复记录", () => {
   expect(parseBackup(JSON.stringify(backup([]))).records).toEqual([]);
