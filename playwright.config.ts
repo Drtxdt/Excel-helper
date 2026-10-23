@@ -27,12 +27,22 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: "**/*.visual.spec.ts",
+      testIgnore: ["**/*.visual.spec.ts", "**/*.tablet.spec.ts"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1366, height: 768 },
       },
     },
+    ...(["chromium", "webkit"] as const).map((browserName) => ({
+      name: `${browserName}-tablet`,
+      testMatch: "**/*.tablet.spec.ts",
+      use: {
+        browserName,
+        ...devices["iPad (gen 7) landscape"],
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+      },
+    })),
     {
       name: "chromium-visual",
       testMatch: "**/*.visual.spec.ts",

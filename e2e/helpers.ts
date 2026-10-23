@@ -13,11 +13,21 @@ export const test = base.extend<{ cleanConsole: void }>({
   ],
 });
 export { expect };
+export async function dismissGuide(page: Page) {
+  const guide = page.getByRole("dialog", { name: "先试一次表格操作" });
+  // First visit opens the actual guide. Revisit leaves it dismissed in this context.
+  await expect(
+    page.getByRole("button", { name: "写入", exact: true }),
+  ).toBeEnabled();
+  if (await guide.isVisible())
+    await guide.getByRole("button", { name: "开始操作", exact: true }).click();
+}
 export async function openLesson(page: Page, id: string) {
   await page.goto(`/#/lesson/${id}`);
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),
   ).toBeEnabled();
+  await dismissGuide(page);
   // Select the task's answer cell through the same locator button a learner uses.
   await page.locator(".target-tags button").first().click();
 }

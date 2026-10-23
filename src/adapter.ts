@@ -106,6 +106,12 @@ export class SpreadsheetAdapter {
     );
     await first.autoFill(r, "COPY");
   }
+  undo() {
+    this.api.undo();
+  }
+  redo() {
+    this.api.redo();
+  }
   async wait() {
     await this.api.getFormula().onCalculationResultApplied(12000);
   }
