@@ -5,5 +5,5 @@ export default defineConfig({
   base: "./",
   worker: { format: "es" },
   build: { chunkSizeWarningLimit: 1800 },
-  test: { testTimeout: 30000 },
+  test: { testTimeout: 30000, include: ["tests/**/*.test.ts"] },
 });

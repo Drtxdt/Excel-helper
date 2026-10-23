@@ -10,7 +10,10 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "check:content": "node scripts/check-content.mjs",
-    "check": "pnpm check:content && pnpm test && pnpm build"
+    "check": "pnpm check:content && pnpm test && pnpm build",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:visual": "playwright test --project=chromium-visual",
+    "check:commits": "node scripts/check-commits.mjs"
   },
   "dependencies": {
     "@univerjs/core": "1.2.0",
@@ -36,6 +39,9 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@playwright/test": "1.64.1",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.7.2",
     "@vitejs/plugin-vue": "^6.0.1",
