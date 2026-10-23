@@ -48,7 +48,11 @@ const traceCell = ref(""),
   }>();
 const quickCell = ref(""),
   quickValue = ref("");
-const category = ref("工具"),
+const category = ref(
+    lesson?.operation?.kind === "sort-filter"
+      ? lesson.operation.filter.choices[0]
+      : "",
+  ),
   ascending = ref(true),
   opRange = ref(""),
   threshold = ref(0),
@@ -165,9 +169,10 @@ async function check() {
     if (lesson!.operation) {
       finish(
         gradeOperation(
-          lesson!.operation.kind,
-          adapter.operationState(lesson!.operation.kind),
+          lesson!.operation,
+          adapter.operationState(lesson!.operation),
           version,
+          lesson!.sheets,
         ),
       );
       return;
@@ -290,7 +295,7 @@ async function fillDown() {
 }
 async function applyOperation() {
   try {
-    await adapter?.operate(lesson!.operation!.kind, {
+    await adapter?.operate(lesson!.operation!, {
       category: category.value,
       ascending: ascending.value,
       range: opRange.value,
@@ -489,12 +494,21 @@ async function applyOperation() {
           }}</strong
           ><template v-if="lesson.operation.kind === 'sort-filter'"
             ><label
-              >分类<select v-model="category">
-                <option>工具</option>
-                <option>食品</option>
+              >{{ lesson.operation.filter.label
+              }}<select
+                v-model="category"
+                :aria-label="lesson.operation.filter.label"
+              >
+                <option
+                  v-for="choice in lesson.operation.filter.choices"
+                  :key="choice"
+                >
+                  {{ choice }}
+                </option>
               </select></label
             ><label
-              >库存<select v-model="ascending">
+              >{{ lesson.operation.sort.label
+              }}<select v-model="ascending">
                 <option :value="true">从小到大</option>
                 <option :value="false">从大到小</option>
               </select></label

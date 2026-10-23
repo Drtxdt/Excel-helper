@@ -32,7 +32,7 @@ pnpm preview
 - `src/storage.ts`：IndexedDB、Zod 备份校验、事务导入、导入前副本。
 - `docs/copy-policy.md`：文案约束。
 
-`pnpm check` 依次验证课程数量与依赖、运行测试、TypeScript 检查和生产构建。不要把引擎测试通过写成 Excel 兼容性通过；真实 Excel 对照情况见 `docs/excel-compatibility.json`。
+`pnpm check` 依次验证课程数量与依赖、运行测试、TypeScript 检查和生产构建。不要把引擎测试通过写成 Excel 兼容性通过；真实 Excel 对照情况见 [对照记录](docs/excel-compatibility.md) 与 `docs/excel-compatibility.json`。
 
 ## 维护注意
 

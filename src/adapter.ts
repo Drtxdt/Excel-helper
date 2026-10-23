@@ -15,7 +15,15 @@ import "@univerjs/preset-sheets-sort/lib/index.css";
 import "@univerjs/preset-sheets-conditional-formatting/lib/index.css";
 import "@univerjs/preset-sheets-data-validation/lib/index.css";
 import FormulaWorker from "./formula.worker?worker";
-import type { WorkbookSnapshot } from "./types";
+import type { OperationGoal, WorkbookSnapshot } from "./types";
+import {
+  bounds,
+  rangeCells,
+  type Bounds,
+  type FormatRule,
+  type OperationState,
+  type OperationInput,
+} from "./operations";
 import { explainMatches } from "./trace";
 import { deserializeListOptions } from "@univerjs/sheets";
 export class SpreadsheetAdapter {
@@ -180,34 +188,41 @@ export class SpreadsheetAdapter {
       });
     return { formula, nodes, references, rows: explainMatches(formula, read) };
   }
-  async operate(kind: string, options: any) {
-    const s = this.api.getActiveWorkbook().getSheetBySheetId("main");
-    if (kind === "sort-filter") {
-      s.getRange("A2:D6").sort({ column: 2, ascending: options.ascending });
-      let filter = s.getFilter();
-      if (filter) filter.remove();
-      filter = s.getRange("A1:D6").createFilter();
-      filter.setColumnFilterCriteria(1, {
-        colId: 1,
+  async operate(goal: OperationGoal, options: OperationInput) {
+    const s = this.api.getActiveWorkbook().getSheetBySheetId(goal.sheet);
+    if (goal.kind === "sort-filter") {
+      const area = bounds(goal.range);
+      s.getFilter()?.remove();
+      s.getRange(
+        area.startRow + 1,
+        area.startColumn,
+        area.endRow - area.startRow,
+        area.endColumn - area.startColumn + 1,
+      ).sort({
+        column: goal.sort.column - area.startColumn,
+        ascending: options.ascending,
+      });
+      const filter = s.getRange(goal.range).createFilter();
+      filter.setColumnFilterCriteria(goal.filter.column, {
+        colId: goal.filter.column,
         filters: { filters: [options.category] },
       });
-    }
-    if (kind === "format") {
-      s.clearConditionalFormatRules();
+    } else if (goal.kind === "format") {
+      // The teaching tool replaces rules only in the chosen range, not on other sheets/ranges.
       const range = s.getRange(options.range);
+      range.clearConditionalFormatRules();
       const rule = s
         .newConditionalFormattingRule()
         .whenNumberLessThan(Number(options.threshold))
-        .setBackground("#fce0da")
+        .setBackground(goal.background)
         .setRanges([range.getRange()])
         .build();
       s.addConditionalFormattingRule(rule);
-    }
-    if (kind === "validation") {
+    } else {
       const rule = this.api
         .newDataValidation()
         .requireValueInList(
-          options.values.split(/[,，]/).map((x: string) => x.trim()),
+          options.values.split(/[,，]/).map((x) => x.trim()),
           false,
           true,
         )
@@ -217,28 +232,86 @@ export class SpreadsheetAdapter {
       s.getRange(options.range).setDataValidation(rule);
     }
   }
-  operationState(kind: string) {
-    const s = this.api.getActiveWorkbook().getSheetBySheetId("main");
-    if (kind === "sort-filter") {
+  operationState(goal: OperationGoal): OperationState {
+    const s = this.api.getActiveWorkbook().getSheetBySheetId(goal.sheet);
+    const area = bounds(goal.range);
+    if (goal.kind === "sort-filter") {
       const f = s.getFilter();
+      const actualRange: Bounds | null = f?.getRange().getRange() ?? null;
+      const filteredRows: number[] = f?.getFilteredOutRows() ?? [];
+      const hiddenRows: number[] = [];
+      for (let r = area.startRow + 1; r <= area.endRow; r++)
+        if (filteredRows.includes(r) || !s.getSheet().getRowVisible(r))
+          hiddenRows.push(r);
+      const criteria: Extract<
+        OperationState,
+        { kind: "sort-filter" }
+      >["criteria"] = [];
+      if (actualRange)
+        for (let c = actualRange.startColumn; c <= actualRange.endColumn; c++) {
+          const rule = f.getColumnFilterCriteria(c);
+          if (rule)
+            criteria.push({
+              column: c,
+              values: rule.filters?.filters ?? [],
+              unsupported: !!(
+                rule.customFilters ||
+                rule.dynamicFilter ||
+                rule.colorFilter ||
+                rule.top10 ||
+                rule.filters?.blank
+              ),
+            });
+        }
+      const values = s.getRange(goal.range).getValues();
       return {
-        criteria: f?.getColumnFilterCriteria(1),
-        range: f?.getRange().getRange(),
-        hidden: f?.getFilteredOutRows(),
-        rows: s.getRange("A2:D6").getValues(),
+        kind: goal.kind,
+        sheet: goal.sheet,
+        range: actualRange,
+        criteria,
+        hiddenRows,
+        filteredRows,
+        headers: values[0],
+        rows: values.slice(1),
       };
     }
-    if (kind === "format") return s.getConditionalFormattingRules();
-    return ["D2", "D3", "D4", "D5", "D6"].map((a) => {
-      const v = s.getRange(a).getDataValidation();
-      return v
-        ? {
-            type: v.getCriteriaType(),
-            options: deserializeListOptions(v.getCriteriaValues()[1] ?? ""),
-            allowInvalid: v.getAllowInvalid(),
-          }
-        : null;
-    });
+    if (goal.kind === "format") {
+      const raw: {
+        ranges: Bounds[];
+        rule: {
+          type: string;
+          subType?: string;
+          operator?: string;
+          value?: unknown;
+          style?: { bg?: { rgb?: string } };
+        };
+      }[] = s.getConditionalFormattingRules();
+      const rules: FormatRule[] = raw.map((r) => ({
+        ranges: r.ranges,
+        type: r.rule.type,
+        subType: r.rule.subType,
+        operator: r.rule.operator,
+        value: r.rule.value,
+        background: r.rule.style?.bg?.rgb,
+      }));
+      return { kind: goal.kind, sheet: goal.sheet, rules };
+    }
+    return {
+      kind: goal.kind,
+      sheet: goal.sheet,
+      cells: rangeCells(area).map((address) => {
+        const v = s.getRange(address).getDataValidation();
+        return {
+          address,
+          type: v?.getCriteriaType() ?? null,
+          values: v
+            ? deserializeListOptions(v.getCriteriaValues()[1] ?? "")
+            : [],
+          allowInvalid: v?.getAllowInvalid() ?? true,
+          showError: v?.rule.showErrorMessage === true,
+        };
+      }),
+    };
   }
   dispose() {
     this.subscription?.dispose();
