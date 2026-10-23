@@ -9,3 +9,5 @@ private/
 outputs/
 .env*
 !.env.example
+playwright-report/
+test-results/
