@@ -38,13 +38,16 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
+  <!-- Modal keystrokes must not reach the spreadsheet's global shortcuts. -->
   <dialog
     ref="element"
     class="focus-dialog"
     :class="kind === 'drawer' ? 'help-panel' : 'modal'"
     :aria-labelledby="id"
     @cancel.prevent="emit('close')"
-    @keydown="trapTab"
+    @keydown.stop="trapTab"
+    @keyup.stop
+    @keypress.stop
   >
     <div class="help-heading">
       <h2 :id="id">{{ title }}</h2>

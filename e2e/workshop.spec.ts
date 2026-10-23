@@ -65,6 +65,20 @@ for (const width of [1024, 1366, 1920])
     });
   });
 
+test("帮助抽屉中的快捷键不撤销底层作答", async ({ page }) => {
+  await openLesson(page, "02");
+  await writeFormula(page, "=B2*C2");
+  const hint = page.getByRole("button", { name: "查看提示", exact: true });
+  await hint.click();
+  await expect(page.getByRole("button", { name: "关闭侧栏", exact: true })).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+z");
+  await page.keyboard.press("Escape");
+  await expect(hint).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "输入公式或数值", exact: true })).toHaveValue("=B2*C2");
+  await page.getByRole("button", { name: "↶ 撤销", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "输入公式或数值", exact: true })).toHaveValue("");
+});
+
 test("键盘选格移动、修改后旧反馈失效，重置后可重新检查", async ({ page }) => {
   await openLesson(page, "02");
   await writeFormula(page, "=B2*C2");
