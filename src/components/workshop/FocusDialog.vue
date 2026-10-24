@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, useId } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { X } from "lucide-vue-next";
 const props = defineProps<{
   title: string;
@@ -9,7 +9,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ close: [] }>();
 const element = ref<HTMLDialogElement>();
-const id = useId();
 let opener: HTMLElement | null = null;
 onMounted(() => {
   opener = props.returnFocus ?? (document.activeElement as HTMLElement);
@@ -43,14 +42,14 @@ onBeforeUnmount(() => {
     ref="element"
     class="focus-dialog"
     :class="kind === 'drawer' ? 'help-panel' : 'modal'"
-    :aria-labelledby="id"
+    :aria-label="title"
     @cancel.prevent="emit('close')"
     @keydown.stop="trapTab"
     @keyup.stop
     @keypress.stop
   >
     <div class="help-heading">
-      <h2 :id="id">{{ title }}</h2>
+      <h2>{{ title }}</h2>
       <button
         class="icon-button"
         :aria-label="closeLabel ?? '关闭'"

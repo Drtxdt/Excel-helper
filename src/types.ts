@@ -72,6 +72,11 @@ export interface Chapter {
   subtitle: string;
   icon: string;
 }
+/** Shared calculation contract; investigations have stable IDs, not course numbers. */
+export type CalculationTask = Pick<
+  LessonDefinition,
+  "id" | "title" | "sheets" | "targets" | "variants" | "operation"
+>;
 export interface CellData {
   v?: CellValue;
   f?: string;

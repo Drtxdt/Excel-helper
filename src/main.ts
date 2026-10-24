@@ -10,6 +10,7 @@ const router = createRouter({
   routes: [
     { path: "/", component: Home },
     { path: "/lesson/:id", component: () => import("./views/Workshop.vue") },
+    { path: "/case/case-017", component: () => import("./views/CaseDesk.vue") },
     { path: "/handbook", component: Library },
     { path: "/records", component: Records },
   ],

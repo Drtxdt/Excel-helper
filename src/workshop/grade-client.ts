@@ -1,8 +1,8 @@
 import GradeWorker from "../grade.worker?worker";
-import type { GradeResult, LessonDefinition, WorkbookSnapshot } from "../types";
+import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
 /** A cancelled/finished check releases its Worker; each check still uses independent workbooks. */
 export function gradeInWorker(
-  lesson: LessonDefinition,
+  lesson: CalculationTask,
   snapshot: WorkbookSnapshot,
   revision: number,
   signal: AbortSignal,

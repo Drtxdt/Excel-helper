@@ -1,4 +1,9 @@
-import type { CellValue, LessonDefinition, WorkbookSnapshot } from "./types";
+import type {
+  CellValue,
+  LessonDefinition,
+  CalculationTask,
+  WorkbookSnapshot,
+} from "./types";
 export function address(a: string) {
   const m = /^([A-Z]+)(\d+)$/.exec(a.replaceAll("$", ""));
   if (!m) throw Error("单元格地址无效");
@@ -35,7 +40,9 @@ export function put(
                   : undefined,
         };
 }
-export function makeWorkbook(l: LessonDefinition): WorkbookSnapshot {
+export function makeWorkbook(
+  l: Pick<CalculationTask, "id" | "title" | "sheets" | "targets">,
+): WorkbookSnapshot {
   const b: WorkbookSnapshot = {
     id: `lesson-${l.id}`,
     name: l.title,

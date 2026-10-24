@@ -1,4 +1,4 @@
-import type { GradeResult, LessonDefinition, WorkbookSnapshot } from "../types";
+import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
 import type { OperationGoal } from "../types";
 import type { OperationInput, OperationState } from "../operations";
 import { gradeOperation } from "../operations";
@@ -43,7 +43,7 @@ export interface SessionDependencies {
     selected: (s: string, c: string, v: string) => void,
   ): SessionAdapter;
   grade(
-    lesson: LessonDefinition,
+    lesson: CalculationTask,
     snapshot: WorkbookSnapshot,
     revision: number,
     signal: AbortSignal,
@@ -133,7 +133,7 @@ export class TeachingSession {
       }
     }
   }
-  async check(lesson: LessonDefinition) {
+  async check(lesson: CalculationTask) {
     if (!this.state.ready || this.checkRun || this.disposed || !this.adapter)
       return;
     const a = this.adapter,
