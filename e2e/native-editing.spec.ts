@@ -108,6 +108,9 @@ test("漏等号一键修正只修改草稿；可按文字写入和撤销", async
   await page.getByRole("button", { name: "按文字写入", exact: true }).click();
   await selectCell(page, 3);
   await expect(formulaInput(page).value).toHaveAttribute("data-value", "B2*C2");
+  await page.getByRole("button", { name: "检查作答", exact: true }).click();
+  await expect(page.locator(".diagnostic")).toHaveCount(1);
+  await expect(page.locator(".diagnostic")).toContainText("开头加上 =");
 });
 test("关闭提示后可继续编辑，路由切换提交尚未确认的公式", async ({ page }) => {
   await openLesson(page, "02");
@@ -161,6 +164,29 @@ test("键盘接受候选，跨表点选保持写入位置，嵌套公式与中�
   await formulaInput(page).fill('=IF(B2>0,ROUND(B2*价格!B2,2),"中文（备注）")');
   await page.getByRole("button", { name: "写入", exact: true }).click();
   await checkPassed(page);
+});
+
+test("过期修正消失，明确文本不拦截，提交后的计算错误与检查一致", async ({
+  page,
+}) => {
+  await openLesson(page, "02");
+  await formulaInput(page).fill("SUM(B2:B4)");
+  await expect(
+    page.getByRole("button", { name: "补上 =", exact: true }),
+  ).toBeVisible();
+  await formulaInput(page).fill("普通备注");
+  await expect(
+    page.getByRole("button", { name: "补上 =", exact: true }),
+  ).toHaveCount(0);
+  await formulaInput(page).fill("'SUM(B2:B4)");
+  await page.getByRole("button", { name: "写入", exact: true }).click();
+  await expect(page.locator(".input-advice")).toHaveCount(0);
+  await formulaInput(page).fill("=1/0");
+  await page.getByRole("button", { name: "写入", exact: true }).click();
+  await expect(page.locator(".input-advice")).toContainText("除数是零或空白");
+  await page.getByRole("button", { name: "检查作答", exact: true }).click();
+  await expect(page.locator(".diagnostic")).toHaveCount(1);
+  await expect(page.locator(".diagnostic")).toContainText("#DIV/0!");
 });
 
 test("从剪贴板粘贴到网格，填充后计算三行", async ({ page, context }) => {
