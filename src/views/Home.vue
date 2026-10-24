@@ -10,6 +10,7 @@ import {
   Truck,
   ClipboardList,
 } from "lucide-vue-next";
+import { cases } from "../cases/catalog";
 import { chapters, lessons } from "../content";
 import { state } from "../state";
 import StationArt from "../components/StationArt.vue";
@@ -63,13 +64,13 @@ const next = computed(
           >进入练习场 →</RouterLink
         >
       </article>
-      <article class="case-entry">
-        <p class="eyebrow">案件调查 · 017</p>
-        <h2>消失的第 17 箱货物</h2>
+      <article v-for="c in cases" :key="c.id" class="case-entry">
+        <p class="eyebrow">案件调查 · {{ c.id.replace("case-", "") }}</p>
+        <h2>{{ c.title }}</h2>
         <p>
-          出库 17 箱，签收却只有 16 箱。单据都在桌上，先把这一箱的去向查明白。
+          {{ c.brief }}
         </p>
-        <RouterLink class="button primary" to="/case/case-017"
+        <RouterLink class="button primary" :to="'/case/' + c.id"
           >进入调查桌 →</RouterLink
         >
         <p class="muted">随时接案；卡住可以看提示，也可以返回练习。</p>

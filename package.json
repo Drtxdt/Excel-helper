@@ -13,7 +13,8 @@
     "check": "pnpm check:content && pnpm test && pnpm build",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:visual": "playwright test --project=chromium-visual",
-    "check:commits": "node scripts/check-commits.mjs"
+    "check:commits": "node scripts/check-commits.mjs",
+    "content:validate": "node scripts/validate-content.mjs"
   },
   "dependencies": {
     "@univerjs/core": "1.2.0",

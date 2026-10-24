@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { RouterLink } from "vue-router";
-import { case017 as definition } from "../cases/definition";
+import { RouterLink, useRoute } from "vue-router";
+import { cases } from "../cases/catalog";
+const route = useRoute();
+const definition = cases.find((c) => c.id === route.params.id)!;
 import {
   freshCase,
   invalidate,
@@ -100,7 +102,7 @@ function exportCase() {
   const url = URL.createObjectURL(blob),
     a = document.createElement("a");
   a.href = url;
-  a.download = "表格补给站-案件017.json";
+  a.download = `表格补给站-${definition.id}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -110,7 +112,9 @@ function exportCase() {
     <header class="case-heading">
       <div>
         <RouterLink to="/">← 返回补给站</RouterLink>
-        <p class="eyebrow">调查档案 · 017</p>
+        <p class="eyebrow">
+          调查档案 · {{ definition.id.replace("case-", "") }}
+        </p>
         <h1>{{ definition.title }}</h1>
       </div>
       <div class="case-save">
@@ -163,7 +167,7 @@ function exportCase() {
           :open="progress.completed || undefined"
         >
           <summary>填写交接结论</summary>
-          <p>选择结论，并绑定两条已核验的证据。猜对选项还不能交班。</p>
+          <p>选择结论，并绑定全部已核验的证据。猜对选项还不能交班。</p>
           <form @submit.prevent="submit">
             <label
               v-for="(label, key) in {
@@ -207,9 +211,9 @@ function exportCase() {
             {{ feedback }}
           </p>
           <div v-if="progress.completed" class="case-solved" role="status">
-            <h3>第 17 箱，找到了。</h3>
+            <h3>{{ definition.success.title }}</h3>
             <p>
-              货物已送到河湾卫生站。补录临时调拨，关联新旧标签，再保留撤回记录，这笔账就能交清楚。
+              {{ definition.success.body }}
             </p>
             <p>
               已结案 ·

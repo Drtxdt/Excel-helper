@@ -77,7 +77,10 @@ function openTrace(e: MouseEvent) {
           {{ d.variant ? d.variant + "：" : "" }}{{ d.message }}
         </li>
       </ul>
-      <span v-else>原始数据与两组变式均通过；测试没有修改你的表格。</span>
+      <span v-else
+        >原始数据与
+        {{ stage.variants.length }} 组变式均通过；测试没有修改你的表格。</span
+      >
     </div>
     <SheetPanel
       :lesson="stage"
@@ -132,7 +135,7 @@ function openTrace(e: MouseEvent) {
           emit('hint');
         "
       >
-        查看两种参考解法
+        查看 {{ stage.solutions.length }} 种参考解法
       </button>
       <div
         v-if="solution"
