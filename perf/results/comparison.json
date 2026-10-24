@@ -1,0 +1,109 @@
+{
+  "bundle": {
+    "before": 18482505,
+    "after": 18497813,
+    "growth": 0.0008282427084422839,
+    "budget": 0.1,
+    "passed": true
+  },
+  "regressions": [],
+  "targets": [
+    {
+      "key": "02/recalculate/all",
+      "n": 5,
+      "p50": 35.39999999990687,
+      "p95": 253.10000000009313,
+      "target": 100,
+      "passed": false
+    },
+    {
+      "key": "02/check/warm",
+      "n": 10,
+      "p50": 602,
+      "p95": 622,
+      "target": 1000,
+      "passed": true
+    },
+    {
+      "key": "07/recalculate/all",
+      "n": 15,
+      "p50": 37.39999999990687,
+      "p95": 55.299999999813735,
+      "target": 100,
+      "passed": true
+    },
+    {
+      "key": "07/check/warm",
+      "n": 10,
+      "p50": 601.3999999999069,
+      "p95": 625.5,
+      "target": 1000,
+      "passed": true
+    },
+    {
+      "key": "26/recalculate/all",
+      "n": 5,
+      "p50": 55.8000000002794,
+      "p95": 59.799999999813735,
+      "target": 100,
+      "passed": true
+    },
+    {
+      "key": "26/check/warm",
+      "n": 10,
+      "p50": 598.7999999998137,
+      "p95": 631.2000000001863,
+      "target": 1000,
+      "passed": true
+    },
+    {
+      "key": "33/recalculate/all",
+      "n": 5,
+      "p50": 55.799999999813735,
+      "p95": 57.59999999962747,
+      "target": 100,
+      "passed": true
+    },
+    {
+      "key": "33/check/warm",
+      "n": 10,
+      "p50": 599.7999999998137,
+      "p95": 639.6000000000931,
+      "target": 1000,
+      "passed": true
+    },
+    {
+      "key": "40/recalculate/all",
+      "n": 55,
+      "p50": 37.10000000009313,
+      "p95": 54.89999999990687,
+      "target": 100,
+      "passed": true
+    },
+    {
+      "key": "40/check/warm",
+      "n": 10,
+      "p50": 611.1000000000931,
+      "p95": 640.7999999998137,
+      "target": 1000,
+      "passed": true
+    },
+    {
+      "key": "case-017/recalculate/all",
+      "n": 100,
+      "p50": 44.700000000186265,
+      "p95": 62.09999999962747,
+      "target": 100,
+      "passed": true
+    },
+    {
+      "key": "case-017/check/warm",
+      "n": 10,
+      "p50": 611,
+      "p95": 660.5,
+      "target": 1000,
+      "passed": true
+    }
+  ],
+  "resourcesReleased": true
+}

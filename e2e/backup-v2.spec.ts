@@ -26,6 +26,7 @@ test("统一备份恢复案件草稿、线索和提示；旧课程备份保留�
   const path = info.outputPath("unified.json");
   await (await downloading).saveAs(path);
   const data = JSON.parse(await readFile(path, "utf8"));
+  await page.screenshot({ path: info.outputPath("unified-records.png"), fullPage: true });
   expect(data.version).toBe(2);
   expect(data.cases[0].stages[0].hints).toBe(1);
   const context = await browser.newContext({
