@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { Search } from "lucide-vue-next";
 import type { LessonDefinition } from "../../types";
 import type { OperationInput } from "../../operations";
 import type { EditorState } from "../../input-diagnostics";
+import { knowledgeCards } from "../../content/catalog";
 import OperationTools from "./OperationTools.vue";
-defineProps<{
+const props = defineProps<{
   lesson: Pick<LessonDefinition, "sheets" | "operation"> & { number?: number };
   allowFill?: boolean;
   editor?: EditorState;
@@ -31,6 +32,14 @@ const emit = defineEmits<{
   retry: [];
   operate: [input: OperationInput];
 }>();
+const inputCards = computed(() => {
+  if (!props.editor?.active || !props.editor.text.startsWith("=")) return [];
+  const text = props.editor.text.replace(/"(?:[^"]|"")*"/g, "");
+  const names = [...text.matchAll(/\b([A-Z][A-Z0-9.]*)\s*\(/gi)].map((m) =>
+    m[1].toUpperCase(),
+  );
+  return knowledgeCards.filter((card) => names.includes(card.name));
+});
 const draftCell = ref(cell.value);
 const addressEditing = ref(false);
 watch([cell, sheet], () => {
@@ -180,6 +189,14 @@ onMounted(() => {
         提示与解法
       </button>
     </div>
+    <details v-if="inputCards.length" class="input-function-help">
+      <summary>查看本次输入的函数说明</summary>
+      <p v-for="card in inputCards" :key="card.id">
+        <strong>{{ card.name }} · {{ card.title }}</strong
+        ><br /><code>{{ card.syntax }}</code
+        ><br />{{ card.note }}
+      </p>
+    </details>
     <OperationTools
       v-if="lesson.operation"
       :goal="lesson.operation"
