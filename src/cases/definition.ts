@@ -25,7 +25,13 @@ export const caseSchema = z
     stages: z.array(stageSchema).min(1),
     clues: z.array(z.string()),
     evidence: z.array(z.string()),
+    success: z.object({ title: z.string().min(1), body: z.string().min(1) }),
     conclusion: z.object({
+      feedback: z.object({
+        destination: z.string().min(1),
+        reason: z.string().min(1),
+        action: z.string().min(1),
+      }),
       destination: z.array(z.string()),
       reason: z.array(z.string()),
       action: z.array(z.string()),

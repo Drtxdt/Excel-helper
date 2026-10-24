@@ -1,0 +1,6 @@
+{
+  "bytes": 18482505,
+  "allowedGrowth": 0.1,
+  "reference": "PR 05 production build with opt-in measurement probes; 2026-10-24",
+  "timingGrowthRequiresReview": 0.2
+}

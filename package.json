@@ -10,10 +10,13 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "check:content": "node scripts/check-content.mjs",
-    "check": "pnpm check:content && pnpm test && pnpm build",
+    "check": "pnpm check:content && pnpm test && pnpm build && pnpm check:budget",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:visual": "playwright test --project=chromium-visual",
-    "check:commits": "node scripts/check-commits.mjs"
+    "check:commits": "node scripts/check-commits.mjs",
+    "content:validate": "node scripts/validate-content.mjs",
+    "perf:measure": "node perf/measure.mjs",
+    "check:budget": "node scripts/check-budget.mjs"
   },
   "dependencies": {
     "@univerjs/core": "1.2.0",

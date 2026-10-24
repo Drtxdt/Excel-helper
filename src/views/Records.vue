@@ -1,10 +1,47 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import { Download, Upload, Check } from "lucide-vue-next";
 import { state, importRecords } from "../state";
-import { backup, previousBackup } from "../storage";
+import {
+  backup,
+  exportBackup,
+  previousBackup,
+  upgradeBackup,
+  readCases,
+} from "../storage";
 import { lessons } from "../content";
+import { cases } from "../cases/catalog";
+import type { CaseProgress } from "../cases/model";
+const investigations = ref<CaseProgress[]>([]);
+async function refreshCases() {
+  investigations.value = await readCases();
+}
+onMounted(() => {
+  void refreshCases().catch(() => {
+    message.value = "案件记录暂时无法读取，请保留原备份。";
+  });
+});
+async function exportAll() {
+  try {
+    download(await exportBackup(records.value), "表格补给站-学习备份.json");
+  } catch {
+    download(
+      { ...backup(records.value), version: 1, cases: undefined },
+      "表格补给站-课程应急备份.json",
+    );
+    message.value =
+      "完整备份未能读取，已导出当前课程记录。案件请在调查桌单独导出。";
+  }
+}
+async function beforeUpgrade() {
+  try {
+    const data = await upgradeBackup();
+    if (data) download(data, "表格补给站-升级前备份.json");
+  } catch {
+    message.value = "暂时无法读取升级前备份。";
+  }
+}
 const message = ref(""),
   file = ref<HTMLInputElement>();
 const records = computed(() => Object.values(state.records));
@@ -28,6 +65,12 @@ async function importFile(e: Event) {
   try {
     await importRecords(await f.text());
     message.value = "备份已恢复。导入前的记录已另存，可用下方按钮下载。";
+    try {
+      await refreshCases();
+    } catch {
+      message.value =
+        "备份已恢复，但案件列表暂时无法读取。请刷新后查看；导入前副本已保留。";
+    }
   } catch {
     message.value =
       "没有导入：文件内容、存储空间或记录版本需要检查，原有记录保留。";
@@ -65,14 +108,11 @@ async function oldBackup() {
       <div>
         <h2>进度存在这台电脑里</h2>
         <p>
-          清理浏览器数据或更换电脑前，请导出备份。导入会替换现有记录，并保留导入前的副本。
+          清理浏览器数据或更换电脑前，请导出备份。新版备份包含课程和案件；导入会替换这两类记录，并保留导入前副本。旧版课程备份只替换课程。
         </p>
       </div>
       <div class="backup-buttons">
-        <button
-          class="button primary"
-          @click="download(backup(records), '表格补给站-学习备份.json')"
-        >
+        <button class="button primary" @click="exportAll">
           <Download :size="17" />导出备份</button
         ><button class="button subtle" @click="file?.click()">
           <Upload :size="17" />导入备份</button
@@ -83,12 +123,28 @@ async function oldBackup() {
           hidden
           @change="importFile"
         /><button class="text-button" @click="oldBackup">下载导入前备份</button>
+        <button class="text-button" @click="beforeUpgrade">
+          下载升级前备份
+        </button>
       </div>
     </section>
     <p v-if="message" class="notice" role="status">{{ message }}</p>
     <label class="motion-switch"
       ><input type="checkbox" v-model="state.motion" />启用短动画</label
     >
+    <section aria-label="案件记录">
+      <h2>案件调查</h2>
+      <p v-for="c in cases" :key="c.id">
+        <RouterLink :to="'/case/' + c.id">{{ c.title }}</RouterLink> ·
+        {{
+          investigations.find((p) => p.caseId === c.id)?.completed
+            ? "已结案"
+            : investigations.some((p) => p.caseId === c.id)
+              ? "调查中"
+              : "还没开始"
+        }}
+      </p>
+    </section>
     <div class="record-list">
       <RouterLink v-for="l in lessons" :to="'/lesson/' + l.id"
         ><span class="record-id">{{ l.id }}</span

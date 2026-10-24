@@ -35,3 +35,6 @@ assert.ok(
 console.log(
   "课程检查通过：8 章、40 关、来源、提示、前置关系、变式与开源依赖。",
 );
+
+const knowledge = fs.readFileSync("src/content/knowledge.json", "utf8");
+assert.ok(!/(在当今数字化时代|激动人心的探索之旅|敬请期待|原型占位|不仅.{0,20}更是)/.test(knowledge));

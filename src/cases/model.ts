@@ -73,16 +73,12 @@ export function verifyEvidence(
 }
 export function conclude(c: CaseDefinition, p: CaseProgress): string {
   if (!p.stages.every((_, i) => validEvidence(p, i)))
-    return "计算证据还没核验完整，先检查两份工作簿。";
+    return "计算证据还没核验完整，先检查尚未核验的工作簿。";
   if (!p.stages.every((_, i) => p.answer.evidence.includes(i)))
-    return "请把两条已核验的证据绑定到交接结论。";
+    return "请把全部已核验的证据绑定到交接结论。";
   for (const k of ["destination", "reason", "action"] as const)
     if (p.answer[k] !== c.conclusion.correct[k])
-      return {
-        destination: "去向与有效签收记录不一致。学校那条是什么状态？",
-        reason: "原因与两份表的差额不一致。临时调拨有没有进入常规汇总？",
-        action: "处理建议还没解决账目缺口。货物已有有效签收，需要补发吗？",
-      }[k];
+      return c.conclusion.feedback[k];
   p.completed = true;
   return "";
 }

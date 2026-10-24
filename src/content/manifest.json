@@ -1,0 +1,426 @@
+{
+  "version": 1,
+  "courses": [
+    {
+      "id": "01",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "02",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "03",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "04",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-round",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "06",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-sum",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "08",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "09",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "10",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "11",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-sum",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-average",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-min",
+          "version": 1
+        },
+        {
+          "id": "fn-max",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-count",
+          "version": 1
+        },
+        {
+          "id": "fn-counta",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "16",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-if",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-and",
+          "version": 1
+        },
+        {
+          "id": "fn-or",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "19",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-iferror",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "21",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-trim",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-value",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-left",
+          "version": 1
+        },
+        {
+          "id": "fn-mid",
+          "version": 1
+        },
+        {
+          "id": "fn-right",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-date",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "26",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-xlookup",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-xlookup",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-xlookup",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-vlookup",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "31",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-sumif",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-countif",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-sumifs",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": [
+        {
+          "id": "fn-countifs",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "36",
+      "version": 2,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "37",
+      "version": 2,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "38",
+      "version": 2,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "39",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    },
+    {
+      "id": "40",
+      "version": 1,
+      "source": "原创任务与数据；函数规范参照 Microsoft Excel 官方文档。",
+      "license": "MIT",
+      "knowledge": []
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-017",
+      "version": 1,
+      "practice": [
+        {
+          "id": "31",
+          "version": 1
+        },
+        {
+          "id": "33",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { measured, performanceEnabled } from "./performance";
 import { createUniver, LocaleType, mergeLocales } from "@univerjs/presets";
 import { UniverSheetsCorePreset } from "@univerjs/preset-sheets-core";
 import coreZh from "@univerjs/preset-sheets-core/locales/zh-CN";
@@ -165,7 +166,12 @@ export class SpreadsheetAdapter {
       : /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)
         ? Number(value)
         : value;
+    const started = performance.now();
     target.setValue(parsed);
+    if (performanceEnabled)
+      void this.wait()
+        .then(() => measured("recalculate", started))
+        .catch(() => {});
   }
   trace(sheet: string, range: string) {
     const s = this.api.getActiveWorkbook().getSheetBySheetId(sheet);

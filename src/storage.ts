@@ -3,36 +3,11 @@ import { z } from "zod";
 import { normalizeRecord } from "./learning";
 import type { LearningRecord } from "./types";
 
-export const draftSchema = z
-  .object({
-    id: z.string(),
-    sheetOrder: z.array(z.string()),
-    sheets: z.record(
-      z.string(),
-      z
-        .object({
-          id: z.string(),
-          name: z.string(),
-          cellData: z.record(
-            z.string(),
-            z.record(
-              z.string(),
-              z
-                .object({
-                  v: z
-                    .union([z.string(), z.number(), z.boolean(), z.null()])
-                    .optional(),
-                  f: z.string().optional(),
-                  t: z.number().optional(),
-                })
-                .passthrough(),
-            ),
-          ),
-        })
-        .passthrough(),
-    ),
-  })
-  .passthrough();
+import { draftSchema } from "./draft-schema";
+export { draftSchema } from "./draft-schema";
+import { parseCaseProgress } from "./cases/progress-schema";
+import { cases } from "./cases/catalog";
+import type { CaseProgress } from "./cases/model";
 const recordSchema = z
   .object({
     lessonId: z.string().regex(/^\d{2}$/),
@@ -45,18 +20,40 @@ const recordSchema = z
     variant: z.number().int().optional(),
   })
   .transform((r) => normalizeRecord(r as LearningRecord));
-export const backupSchema = z.object({
+const legacyBackupSchema = z.object({
   format: z.literal("supply-station"),
   version: z.literal(1),
   exportedAt: z.string(),
   records: z.array(recordSchema).max(40),
 });
-export function backup(records: LearningRecord[]) {
+const caseProgressSchema = z.unknown().transform((input, ctx) => {
+  try {
+    const id = (input as { caseId?: string })?.caseId;
+    const definition = cases.find((c) => c.id === id);
+    if (!definition) throw Error("未知案件");
+    return parseCaseProgress(definition, input);
+  } catch {
+    ctx.addIssue({ code: "custom", message: "案件记录无效或版本不匹配。" });
+    return z.NEVER;
+  }
+});
+export const backupSchema = z.union([
+  legacyBackupSchema,
+  legacyBackupSchema.extend({
+    version: z.literal(2),
+    cases: z.array(caseProgressSchema).max(100),
+  }),
+]);
+export function backup(
+  records: LearningRecord[],
+  caseRecords: CaseProgress[] = [],
+) {
   return {
     format: "supply-station" as const,
-    version: 1 as const,
+    version: 2 as const,
     exportedAt: new Date().toISOString(),
     records: records.map(normalizeRecord),
+    cases: caseRecords,
   };
 }
 export function parseBackup(text: string) {
@@ -64,6 +61,15 @@ export function parseBackup(text: string) {
   const data = backupSchema.parse(JSON.parse(text));
   if (new Set(data.records.map((r) => r.lessonId)).size !== data.records.length)
     throw Error("备份包含重复关卡。");
+  if (
+    data.records.some((r) => Number(r.lessonId) < 1 || Number(r.lessonId) > 40)
+  )
+    throw Error("未知关卡。");
+  if (
+    data.version === 2 &&
+    new Set(data.cases.map((c) => c.caseId)).size !== data.cases.length
+  )
+    throw Error("备份包含重复案件。");
   return data;
 }
 
@@ -100,6 +106,7 @@ export interface StorageOptions {
   connect?: () => Promise<IDBPDatabase>;
   onConflict?: () => void;
   onCommit?: () => void;
+  legacyCaseName?: string;
 }
 
 export function createStorage(options: StorageOptions = {}) {
@@ -196,6 +203,54 @@ export function createStorage(options: StorageOptions = {}) {
   }
   async function initialize() {
     known ??= (await metadata()) ?? emptyMetadata();
+    const db = await database();
+    if (await db.get("settings", "cases-migrated")) return;
+    const legacy = await openDB(
+      options.legacyCaseName ??
+        (name === "supply-station"
+          ? "supply-station-cases"
+          : name + "-legacy-cases"),
+      1,
+      {
+        upgrade(d) {
+          d.createObjectStore("cases");
+        },
+      },
+    );
+    let raw: unknown[];
+    try {
+      raw = await legacy.getAll("cases");
+    } finally {
+      legacy.close();
+    }
+    // Validate everything before starting the atomic copy. Keep the old DB intact.
+    const imported = raw.map((r) =>
+      caseProgressSchema.parse((r as { progress: unknown }).progress),
+    );
+    const tx = db.transaction(["records", "settings"], "readwrite");
+    void tx.done.catch(() => {});
+    const settings = tx.objectStore("settings");
+    if (!(await settings.get("cases-migrated"))) {
+      const records = (await tx.objectStore("records").getAll()).map((r) =>
+        recordSchema.parse(r),
+      );
+      await settings.put(backup(records, imported), "before-upgrade");
+      for (const progress of imported)
+        await settings.put(
+          { revision: 1, progress },
+          "case:" + progress.caseId,
+        );
+      await settings.put(true, "cases-migrated");
+    }
+    await tx.done;
+  }
+  async function caseRecords(store: {
+    getAll(query?: IDBKeyRange): Promise<any[]>;
+  }) {
+    // Select by key, not by payload shape: a damaged case must not disappear from exports.
+    return (await store.getAll(IDBKeyRange.bound("case:", "case:\uffff"))).map(
+      (value) => caseProgressSchema.parse(value?.progress),
+    );
   }
 
   async function write(entry: Journal, recovering = false) {
@@ -360,7 +415,21 @@ export function createStorage(options: StorageOptions = {}) {
           const previous = (await store.getAll()).map((r) =>
             recordSchema.parse(r),
           );
-          await settings.put(backup(previous), "before-import");
+          await settings.put(
+            backup(previous, await caseRecords(settings)),
+            "before-import",
+          );
+          // v1 is course-only: preserve cases. v2 is a complete replacement.
+          if (data.version === 2) {
+            for (const key of await settings.getAllKeys())
+              if (typeof key === "string" && key.startsWith("case:"))
+                await settings.delete(key);
+            for (const progress of data.cases)
+              await settings.put(
+                { revision: 1, progress },
+                "case:" + progress.caseId,
+              );
+          }
           await store.clear();
           for (const record of data.records) await store.put(record);
           const next = { generation: current.generation + 1, stamps: {} };
@@ -384,6 +453,88 @@ export function createStorage(options: StorageOptions = {}) {
           await tx.done.catch(() => {});
           throw error;
         }
+      });
+    },
+    readCases() {
+      return enqueue(async () => {
+        await initialize();
+        return caseRecords((await database()).transaction("settings").store);
+      });
+    },
+    readCase(id: string) {
+      return enqueue(async () => {
+        await initialize();
+        const tx = (await database()).transaction("settings");
+        const saved = await tx.store.get("case:" + id);
+        const meta: Metadata =
+          (await tx.store.get("revision-state")) ?? emptyMetadata();
+        await tx.done;
+        return {
+          progress: saved
+            ? caseProgressSchema.parse(saved.progress)
+            : undefined,
+          revision: saved?.revision ?? 0,
+          generation: meta.generation,
+        };
+      });
+    },
+    saveCase(
+      progress: CaseProgress,
+      expected: { revision: number; generation: number },
+    ) {
+      const snapshot = caseProgressSchema.parse(
+        JSON.parse(JSON.stringify(progress)),
+      );
+      return enqueue(async () => {
+        await initialize();
+        const tx = (await database()).transaction("settings", "readwrite");
+        void tx.done.catch(() => {});
+        const saved = await tx.store.get("case:" + snapshot.caseId);
+        const meta: Metadata =
+          (await tx.store.get("revision-state")) ?? emptyMetadata();
+        if (
+          (saved?.revision ?? 0) !== expected.revision ||
+          meta.generation !== expected.generation
+        ) {
+          await tx.done;
+          throw Error(
+            "另一页面更新了案件。当前作答已保留，请导出后重新载入；不会自动覆盖。",
+          );
+        }
+        const revision = expected.revision + 1;
+        await tx.store.put(
+          { revision, progress: snapshot },
+          "case:" + snapshot.caseId,
+        );
+        const key = "case:" + snapshot.caseId;
+        meta.stamps[key] = { revision, writer: session, sequence: ++sequence };
+        await tx.store.put(meta, "revision-state");
+        await tx.done;
+        known!.stamps[key] = meta.stamps[key];
+        options.onCommit?.();
+        Object.assign(expected, { revision, generation: meta.generation });
+        return { revision, generation: meta.generation };
+      });
+    },
+    exportBackup(records?: LearningRecord[]) {
+      const captured = records && JSON.parse(JSON.stringify(records));
+      return enqueue(async () => {
+        await initialize();
+        const tx = (await database()).transaction(["records", "settings"]);
+        const courses =
+          captured ??
+          (await tx.objectStore("records").getAll()).map((r) =>
+            recordSchema.parse(r),
+          );
+        const investigations = await caseRecords(tx.objectStore("settings"));
+        await tx.done;
+        return backup(courses, investigations);
+      });
+    },
+    upgradeBackup() {
+      return enqueue(async () => {
+        await initialize();
+        return (await database()).get("settings", "before-upgrade");
       });
     },
     previousBackup() {
@@ -417,7 +568,7 @@ try {
 } catch {
   /* Storage events and focus checks remain available. */
 }
-const service = createStorage({
+export const service = createStorage({
   journal: localJournal,
   onConflict: () => conflictListeners.forEach((listener) => listener()),
   onCommit: () => {
@@ -447,3 +598,7 @@ if (typeof window !== "undefined") {
   });
   window.addEventListener("focus", check);
 }
+
+export const exportBackup = service.exportBackup;
+export const upgradeBackup = service.upgradeBackup;
+export const readCases = service.readCases;

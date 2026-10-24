@@ -1,3 +1,4 @@
+import { measured } from "../performance";
 import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
 import type { OperationGoal } from "../types";
 import type { OperationInput, OperationState } from "../operations";
@@ -103,6 +104,7 @@ export class TeachingSession {
     this.deps.changed();
   };
   async prepare(snapshot: WorkbookSnapshot, sheet: string, cell: string) {
+    const started = performance.now();
     if (this.disposed) return;
     this.init?.abort();
     this.cancelCheck();
@@ -124,6 +126,7 @@ export class TeachingSession {
       await bounded(a.wait(), run.signal, this.deps.waitTimeout ?? 12000);
       if (run.signal.aborted || this.disposed) return;
       a.focus(sheet, cell);
+      measured("ready", started);
       this.state.ready = true;
       this.state.phase = "editing";
     } catch (e) {
@@ -136,6 +139,7 @@ export class TeachingSession {
   async check(lesson: CalculationTask) {
     if (!this.state.ready || this.checkRun || this.disposed || !this.adapter)
       return;
+    const started = performance.now();
     const a = this.adapter,
       run = new AbortController(),
       revision = this.state.revision;
@@ -167,6 +171,7 @@ export class TeachingSession {
         return;
       if (result.revision !== revision)
         throw Error("检查结果已过期，请重新检查最新作答。");
+      measured("check", started);
       this.state.result = result;
       this.state.phase = result.status === "error" ? "error" : "feedback";
       if (result.status === "passed") this.deps.passed(result);
