@@ -5,7 +5,7 @@ import { passedRecord } from "../learning";
 import { exerciseLesson } from "../exercise";
 import { makeWorkbook, put } from "../workbook";
 import { TeachingSession, sessionState } from "./session";
-import { gradeInWorker } from "./grade-client";
+import { gradeInWorker, disposeGradeWorker } from "./grade-client";
 import type { LessonDefinition, WorkbookSnapshot } from "../types";
 export function useTeachingSession(lesson: LessonDefinition) {
   const ui = shallowReactive(sessionState());
@@ -162,6 +162,7 @@ export function useTeachingSession(lesson: LessonDefinition) {
     void persist();
     disposed = true;
     session.dispose();
+    disposeGradeWorker();
     adapter = undefined;
   });
   return {

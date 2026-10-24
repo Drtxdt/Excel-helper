@@ -1,0 +1,98 @@
+--- a/src/adapter.ts
++++ b/src/adapter.ts
+@@ -1,3 +1,4 @@
++import { measured } from "./performance";
+ import { createUniver, LocaleType, mergeLocales } from "@univerjs/presets";
+ import { UniverSheetsCorePreset } from "@univerjs/preset-sheets-core";
+ import coreZh from "@univerjs/preset-sheets-core/locales/zh-CN";
+@@ -165,7 +166,9 @@
+       : /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)
+         ? Number(value)
+         : value;
++    const started = performance.now();
+     target.setValue(parsed);
++    void this.wait().then(() => measured("recalculate", started)).catch(() => {});
+   }
+   trace(sheet: string, range: string) {
+     const s = this.api.getActiveWorkbook().getSheetBySheetId(sheet);
+--- a/src/workshop/session.ts
++++ b/src/workshop/session.ts
+@@ -1,3 +1,4 @@
++import { measured } from "../performance";
+ import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
+ import type { OperationGoal } from "../types";
+ import type { OperationInput, OperationState } from "../operations";
+@@ -103,6 +104,7 @@
+     this.deps.changed();
+   };
+   async prepare(snapshot: WorkbookSnapshot, sheet: string, cell: string) {
++    const started = performance.now();
+     if (this.disposed) return;
+     this.init?.abort();
+     this.cancelCheck();
+@@ -124,6 +126,7 @@
+       await bounded(a.wait(), run.signal, this.deps.waitTimeout ?? 12000);
+       if (run.signal.aborted || this.disposed) return;
+       a.focus(sheet, cell);
++      measured("ready", started);
+       this.state.ready = true;
+       this.state.phase = "editing";
+     } catch (e) {
+@@ -136,6 +139,7 @@
+   async check(lesson: CalculationTask) {
+     if (!this.state.ready || this.checkRun || this.disposed || !this.adapter)
+       return;
++    const started = performance.now();
+     const a = this.adapter,
+       run = new AbortController(),
+       revision = this.state.revision;
+@@ -167,6 +171,7 @@
+         return;
+       if (result.revision !== revision)
+         throw Error("检查结果已过期，请重新检查最新作答。");
++      measured("check", started);
+       this.state.result = result;
+       this.state.phase = result.status === "error" ? "error" : "feedback";
+       if (result.status === "passed") this.deps.passed(result);
+--- a/src/grade.worker.ts
++++ b/src/grade.worker.ts
+@@ -3,3 +3,5 @@
+   const { id, lesson, snapshot, revision } = e.data;
+   self.postMessage({ id, result: await grade(lesson, snapshot, revision) });
+ };
++
++self.postMessage({ ready: true });
+--- a/src/workshop/grade-client.ts
++++ b/src/workshop/grade-client.ts
+@@ -1,3 +1,4 @@
++import { measured } from "../performance";
+ import GradeWorker from "../grade.worker?worker";
+ import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
+ /** A cancelled/finished check releases its Worker; each check still uses independent workbooks. */
+@@ -8,6 +9,7 @@
+   signal: AbortSignal,
+ ): Promise<GradeResult> {
+   return new Promise((resolve, reject) => {
++    const started = performance.now();
+     const worker = new GradeWorker();
+     const close = () => {
+       worker.terminate();
+@@ -23,6 +25,7 @@
+       reject(Error("检查未完成，作答已保留。请重新检查。"));
+     };
+     worker.onmessage = (e) => {
++      if (e.data.ready) { measured("worker-init", started); return; }
+       close();
+       if (e.data.id !== revision || !e.data.result)
+         reject(Error("检查结果无效，请重试。"));
+--- /dev/null
++++ b/src/performance.ts
+@@ -0,0 +1,8 @@
++// Opt-in diagnostics; bounded and read-only, never stores workbook contents.
++const enabled = typeof location !== 'undefined' && new URLSearchParams(location.search).has('perf');
++export function measured(name: string, start: number) {
++  if (!enabled) return;
++  performance.measure(`supply:${name}`, { start, end: performance.now() });
++  const entries = performance.getEntriesByName(`supply:${name}`);
++  if (entries.length > 200) performance.clearMeasures(`supply:${name}`);
++}

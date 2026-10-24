@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, ref, shallowReactive } from "vue";
 import { SpreadsheetAdapter } from "../adapter";
 import { TeachingSession, sessionState } from "../workshop/session";
-import { gradeInWorker } from "../workshop/grade-client";
+import { gradeInWorker, disposeGradeWorker } from "../workshop/grade-client";
 import { makeWorkbook } from "../workbook";
 import { sourceError } from "./model";
 import type { CaseStage } from "./definition";
@@ -53,7 +53,10 @@ export function useCaseSession(
   function traceSelection() {
     trace.value = adapter?.trace(ui.sheet, ui.cell);
   }
-  onBeforeUnmount(() => session.dispose());
+  onBeforeUnmount(() => {
+    session.dispose();
+    disposeGradeWorker();
+  });
   return {
     ui,
     session,
