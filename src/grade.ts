@@ -1,4 +1,10 @@
-import type { GradeResult, CalculationTask, WorkbookSnapshot } from "./types";
+import { inputIssue, calculationAdvice } from "./input-diagnostics";
+import type {
+  GradeResult,
+  CalculationTask,
+  WorkbookSnapshot,
+  Diagnostic,
+} from "./types";
 import { calculate } from "./headless";
 import { address, cell, equal, put } from "./workbook";
 export async function grade(
@@ -15,6 +21,7 @@ export async function grade(
     duration: 0,
   };
   try {
+    const diagnosed = new Set<string>();
     for (const variant of [null, ...l.variants]) {
       const copy = structuredClone(input);
       if (variant)
@@ -34,7 +41,29 @@ export async function grade(
         const used = functions[`${t.sheet}:${r}:${c}`] ?? [];
         const missing = (t.functions ?? []).filter((f) => !used.includes(f));
         let message = "";
-        if (!equal(actual, expected))
+        let code: Diagnostic["code"] = "result-mismatch";
+        const issue =
+          t.formula &&
+          !original.f &&
+          original.t !== 4 &&
+          typeof original.v === "string"
+            ? inputIssue(original.v)
+            : undefined;
+        const advice =
+          original.f && !equal(actual, expected)
+            ? calculationAdvice(actual)
+            : undefined;
+        if (issue) {
+          if (diagnosed.has(key)) continue;
+          diagnosed.add(key);
+          code = issue.code;
+          message = `${t.cell}：${issue.message}`;
+        } else if (advice) {
+          if (diagnosed.has(`${key}:${actual}`)) continue;
+          diagnosed.add(`${key}:${actual}`);
+          code = "formula-error";
+          message = `${t.cell} 得到 ${actual}。${advice}`;
+        } else if (!equal(actual, expected))
           message = `${t.cell} 当前是 ${actual ?? "空白"}，这份数据应得到 ${expected}。${variant ? "数据改变后，检查引用是否仍指向正确位置。" : ""}`;
         else if (t.formula && !original.f)
           message = `${t.cell} 的结果对了，请用公式让它随数据变化。`;
@@ -43,6 +72,8 @@ export async function grade(
         if (message)
           result.diagnostics.push({
             cell: key,
+            code,
+            action: "locate",
             expected,
             actual,
             message,
@@ -50,6 +81,13 @@ export async function grade(
           });
       }
     }
+    const priority = (d: Diagnostic) =>
+      d.code === "missing-equals" || d.code === "syntax"
+        ? 0
+        : d.code === "formula-error"
+          ? 1
+          : 2;
+    result.diagnostics.sort((a, b) => priority(a) - priority(b));
     result.status = result.diagnostics.length ? "incorrect" : "passed";
   } catch (e) {
     result.status = "error";

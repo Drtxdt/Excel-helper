@@ -1,3 +1,4 @@
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { computed, onBeforeUnmount, ref, shallowReactive } from "vue";
 import { SpreadsheetAdapter } from "../adapter";
 import { TeachingSession, sessionState } from "../workshop/session";
@@ -20,12 +21,13 @@ export function useCaseSession(
     ? JSON.parse(JSON.stringify(draft))
     : makeWorkbook(stage);
   const session = new TeachingSession(ui, {
-    create(snapshot, onChange, selected) {
+    create(snapshot, onChange, selected, editing) {
       return (adapter = new SpreadsheetAdapter(
         host,
         snapshot,
         onChange,
         selected,
+        editing,
       ));
     },
     grade(task, snapshot, revision, signal) {
@@ -53,6 +55,9 @@ export function useCaseSession(
   function traceSelection() {
     trace.value = adapter?.trace(ui.sheet, ui.cell);
   }
+  const leave = async () => !ui.ready || (await session.commit());
+  onBeforeRouteLeave(leave);
+  onBeforeRouteUpdate(leave);
   onBeforeUnmount(() => {
     session.dispose();
     disposeGradeWorker();

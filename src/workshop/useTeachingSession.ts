@@ -1,3 +1,4 @@
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { computed, onBeforeUnmount, ref, shallowReactive } from "vue";
 import { SpreadsheetAdapter } from "../adapter";
 import { state, load, save } from "../state";
@@ -26,13 +27,14 @@ export function useTeachingSession(lesson: LessonDefinition) {
   const current = computed(() => exerciseLesson(lesson, variant.value));
   const busy = computed(() => ui.phase === "waiting" || ui.phase === "grading");
   const session = new TeachingSession(ui, {
-    create(snapshot, changed, selected) {
+    create(snapshot, changed, selected, editing) {
       if (!host) throw Error("表格容器尚未准备好。");
       return (adapter = new SpreadsheetAdapter(
         host,
         snapshot,
         changed,
         selected,
+        editing,
       ));
     },
     grade: gradeInWorker,
@@ -156,6 +158,15 @@ export function useTeachingSession(lesson: LessonDefinition) {
       ui.error = "请输入有效的单元格地址，例如 D2。";
     }
   }
+  async function leave() {
+    if (!ui.ready) return true;
+    if (!(await session.commit())) return false;
+    await adapter?.wait();
+    await persist();
+    return true;
+  }
+  onBeforeRouteLeave(leave);
+  onBeforeRouteUpdate(leave);
   onBeforeUnmount(() => {
     window.removeEventListener("pagehide", flush);
     clearTimeout(timer);

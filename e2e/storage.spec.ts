@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { readFile } from "node:fs/promises";
 import {
   test,
@@ -73,9 +74,10 @@ test("另一标签页导入后保留本页作答，允许导出，再明确重�
   await expect(page.getByRole("alert")).toContainText("已保存的学习记录有更新");
   await writeFormula(page, "=B2*C2+1");
   await expect(page.locator(".workshop-heading")).toContainText("保存未成功");
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue("=B2*C2+1");
+  await expect(formulaInput(page).value).toHaveAttribute(
+    "data-value",
+    "=B2*C2+1",
+  );
   await page.screenshot({
     path: testInfo.outputPath("storage-conflict.png"),
     fullPage: true,

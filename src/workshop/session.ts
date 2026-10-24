@@ -1,3 +1,4 @@
+import type { EditorState } from "../input-diagnostics";
 import { measured } from "../performance";
 import type { GradeResult, CalculationTask, WorkbookSnapshot } from "../types";
 import type { OperationGoal } from "../types";
@@ -9,16 +10,20 @@ export type Phase =
 export interface SessionState {
   phase: Phase;
   ready: boolean;
+  committing: boolean;
   revision: number;
   error: string;
   result?: GradeResult;
+  editor?: EditorState;
   sheet: string;
   cell: string;
   value: string;
+  calculationError?: string;
 }
 export const sessionState = (): SessionState => ({
   phase: "preparing",
   ready: false,
+  committing: false,
   revision: 0,
   error: "",
   sheet: "",
@@ -26,6 +31,12 @@ export const sessionState = (): SessionState => ({
   value: "",
 });
 export interface SessionAdapter {
+  ready?(): Promise<void>;
+  commit?(): Promise<boolean>;
+  resolveInput?(
+    action: "equals" | "text" | "edit",
+    revision: number,
+  ): Promise<void>;
   wait(): Promise<void>;
   snapshot(): WorkbookSnapshot;
   dispose(): void;
@@ -41,7 +52,8 @@ export interface SessionDependencies {
   create(
     snapshot: WorkbookSnapshot,
     changed: () => void,
-    selected: (s: string, c: string, v: string) => void,
+    selected: (s: string, c: string, v: string, error?: string) => void,
+    editing: (editor: EditorState) => void,
   ): SessionAdapter;
   grade(
     lesson: CalculationTask,
@@ -86,6 +98,7 @@ export class TeachingSession {
   private init?: AbortController;
   private checkRun?: AbortController;
   private disposed = false;
+  private actions = new Set<Promise<boolean>>();
   constructor(
     readonly state: SessionState,
     private deps: SessionDependencies,
@@ -108,9 +121,12 @@ export class TeachingSession {
     if (this.disposed) return;
     this.init?.abort();
     this.cancelCheck();
+    this.actions.clear();
     const run = new AbortController();
     this.init = run;
     this.state.ready = false;
+    this.state.committing = false;
+    this.state.editor = undefined;
     this.state.phase = "preparing";
     this.state.result = undefined;
     this.state.error = "";
@@ -118,12 +134,37 @@ export class TeachingSession {
     this.adapter?.dispose();
     this.adapter = undefined;
     try {
-      const a = this.deps.create(snapshot, this.changed, (s, c, v) => {
-        if (!run.signal.aborted && !this.disposed)
-          Object.assign(this.state, { sheet: s, cell: c, value: v });
-      });
+      const a = this.deps.create(
+        snapshot,
+        () => {
+          if (!run.signal.aborted && !this.disposed) this.changed();
+        },
+        (s, c, v, calculationError) => {
+          if (!run.signal.aborted && !this.disposed)
+            Object.assign(this.state, {
+              sheet: s,
+              cell: c,
+              value: v,
+              calculationError,
+            });
+        },
+        (editor) => {
+          if (run.signal.aborted || this.disposed) return;
+          this.state.editor = editor;
+          if (editor.active) {
+            this.cancelCheck();
+            this.state.result = undefined;
+            this.state.error = "";
+            this.state.phase = "editing";
+          }
+        },
+      );
       this.adapter = a;
-      await bounded(a.wait(), run.signal, this.deps.waitTimeout ?? 12000);
+      await bounded(
+        a.ready ? a.ready() : a.wait(),
+        run.signal,
+        this.deps.waitTimeout ?? 12000,
+      );
       if (run.signal.aborted || this.disposed) return;
       a.focus(sheet, cell);
       measured("ready", started);
@@ -139,6 +180,15 @@ export class TeachingSession {
   async check(lesson: CalculationTask) {
     if (!this.state.ready || this.checkRun || this.disposed || !this.adapter)
       return;
+    const a0 = this.adapter;
+    if (
+      this.actions.size &&
+      !(await Promise.all([...this.actions])).every(Boolean)
+    )
+      return;
+    if (this.disposed || a0 !== this.adapter || this.checkRun) return;
+    if (a0.commit && !(await this.commit())) return;
+    if (this.disposed || a0 !== this.adapter || this.checkRun) return;
     const started = performance.now();
     const a = this.adapter,
       run = new AbortController(),
@@ -188,6 +238,32 @@ export class TeachingSession {
       if (this.checkRun === run) this.checkRun = undefined;
     }
   }
+  async commit(): Promise<boolean> {
+    if (!this.state.ready || !this.adapter || this.disposed) return false;
+    const a = this.adapter;
+    if (
+      this.actions.size &&
+      !(await Promise.all([...this.actions])).every(Boolean)
+    )
+      return false;
+    if (this.disposed || a !== this.adapter) return false;
+    this.state.committing = true;
+    try {
+      const accepted = a.commit ? await a.commit() : true;
+      if (accepted && !this.disposed && a === this.adapter) await a.wait();
+      return accepted && !this.disposed && a === this.adapter;
+    } catch (e) {
+      if (a === this.adapter && !this.disposed)
+        this.state.error =
+          e instanceof Error ? e.message : "输入尚未写入，请继续修改。";
+      return false;
+    } finally {
+      if (!this.disposed && a === this.adapter) this.state.committing = false;
+    }
+  }
+  resolveInput(action: "equals" | "text" | "edit", revision: number) {
+    return this.act(() => this.adapter?.resolveInput?.(action, revision));
+  }
   snapshot() {
     return this.adapter?.snapshot();
   }
@@ -205,7 +281,11 @@ export class TeachingSession {
     });
   }
   fill(sheet = this.state.sheet, range = this.state.cell) {
-    return this.act(() => this.adapter?.fillDown(sheet, range));
+    const a = this.adapter;
+    return this.act(async () => {
+      await a?.fillDown(sheet, range);
+      if (a === this.adapter) await a?.wait();
+    });
   }
   undo() {
     this.act(() => this.adapter?.undo());
@@ -220,22 +300,31 @@ export class TeachingSession {
       if (adapter === this.adapter) this.changed();
     });
   }
-  private async act(action: () => unknown) {
-    if (!this.state.ready || this.disposed) return;
+  private act(action: () => unknown) {
+    const task = this.perform(action);
+    this.actions.add(task);
+    void task.finally(() => this.actions.delete(task));
+    return task;
+  }
+  private async perform(action: () => unknown): Promise<boolean> {
+    if (!this.state.ready || this.disposed) return false;
     const a = this.adapter;
     try {
       await action();
+      return a === this.adapter && !this.disposed;
     } catch (e) {
       if (a === this.adapter && !this.disposed) {
         this.state.phase = "error";
         this.state.error =
           e instanceof Error ? e.message : "操作未完成，请重试。";
       }
+      return false;
     }
   }
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.actions.clear();
     this.init?.abort();
     this.cancelCheck();
     this.adapter?.dispose();

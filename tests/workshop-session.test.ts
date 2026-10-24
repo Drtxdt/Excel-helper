@@ -69,6 +69,85 @@ function setup() {
   };
 }
 afterEach(() => vi.useRealTimers());
+test("旧工作簿尚未完成的操作不阻塞新关检查", async () => {
+  const x = setup();
+  await x.open();
+  const filling = deferred<void>();
+  x.adapters[0].fillDown = () => filling.promise;
+  const old = x.session.fill("main", "D2:D4");
+  await x.open();
+  x.grade.mockResolvedValueOnce(x.result());
+  await x.session.check(lessons[1]);
+  expect(x.passed).toHaveBeenCalledOnce();
+  filling.resolve();
+  await old;
+  expect(x.state.result?.status).toBe("passed");
+  x.session.dispose();
+});
+test("检查等待正在进行的填充，不能先读到未填完的快照", async () => {
+  const x = setup();
+  await x.open();
+  const filling = deferred<void>();
+  x.adapters[0].fillDown = () => filling.promise;
+  x.grade.mockImplementation(async (_l, _b, revision) => ({
+    ...x.result(),
+    revision,
+  }));
+  void x.session.fill("main", "D2:D4");
+  const checking = x.session.check(lessons[6]);
+  await Promise.resolve();
+  expect(x.grade).not.toHaveBeenCalled();
+  x.session.changed();
+  filling.resolve();
+  await checking;
+  expect(x.grade).toHaveBeenCalledOnce();
+  expect(x.passed).toHaveBeenCalledOnce();
+  x.session.dispose();
+});
+test("切关后旧适配器的修改通知不增加新关修订号", async () => {
+  const x = setup();
+  await x.open();
+  const old = x.adapters[0];
+  await x.open();
+  const revision = x.state.revision;
+  old.write("main", "D2", "旧输入");
+  expect(x.state.revision).toBe(revision);
+  expect(x.changed).not.toHaveBeenCalled();
+  x.session.dispose();
+});
+test("先提交编辑，再以提交后的修订号取快照判题", async () => {
+  const x = setup();
+  await x.open();
+  const commit = deferred<boolean>();
+  x.adapters[0].commit = vi.fn(() => commit.promise);
+  x.grade.mockImplementation(async (_l, _b, revision) => ({
+    ...x.result(),
+    revision,
+  }));
+  const checking = x.session.check(lessons[1]);
+  expect(x.grade).not.toHaveBeenCalled();
+  x.session.changed();
+  commit.resolve(true);
+  await checking;
+  expect(x.grade.mock.calls[0][2]).toBe(x.state.revision);
+  expect(x.passed).toHaveBeenCalledOnce();
+  x.session.dispose();
+});
+test("提交被输入提示阻止时不检查；旧工作簿的迟到提交不能检查新表", async () => {
+  const x = setup();
+  await x.open();
+  x.adapters[0].commit = vi.fn().mockResolvedValue(false);
+  await x.session.check(lessons[1]);
+  expect(x.grade).not.toHaveBeenCalled();
+  const pending = deferred<boolean>();
+  x.adapters[0].commit = () => pending.promise;
+  const checking = x.session.check(lessons[1]);
+  await x.open();
+  pending.resolve(true);
+  await checking;
+  expect(x.grade).not.toHaveBeenCalled();
+  x.session.dispose();
+});
 test("等待计算后才取快照并进入判题，完成时才写学习记录", async () => {
   const x = setup();
   await x.open();

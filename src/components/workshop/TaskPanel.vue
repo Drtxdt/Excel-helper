@@ -49,6 +49,7 @@ defineEmits<{
       </div>
     </div>
     <GradeFeedback
+      @focus="(s, c) => $emit('focus', s, c)"
       :result="result"
       :lesson="lesson"
       :variant="variant"

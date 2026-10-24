@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { test, expect, openLesson, writeFormula, checkPassed } from "./helpers";
 
 test("引导可跳过、重开；帮助与重置对话框限制焦点并返回触发按钮", async ({
@@ -70,13 +71,18 @@ test("帮助抽屉中的快捷键不撤销底层作答", async ({ page }) => {
   await writeFormula(page, "=B2*C2");
   const hint = page.getByRole("button", { name: "查看提示", exact: true });
   await hint.click();
-  await expect(page.getByRole("button", { name: "关闭侧栏", exact: true })).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "关闭侧栏", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("ControlOrMeta+z");
   await page.keyboard.press("Escape");
   await expect(hint).toBeFocused();
-  await expect(page.getByRole("textbox", { name: "输入公式或数值", exact: true })).toHaveValue("=B2*C2");
+  await expect(formulaInput(page).value).toHaveAttribute(
+    "data-value",
+    "=B2*C2",
+  );
   await page.getByRole("button", { name: "↶ 撤销", exact: true }).click();
-  await expect(page.getByRole("textbox", { name: "输入公式或数值", exact: true })).toHaveValue("");
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", "");
 });
 
 test("键盘选格移动、修改后旧反馈失效，重置后可重新检查", async ({ page }) => {
@@ -92,15 +98,15 @@ test("键盘选格移动、修改后旧反馈失效，重置后可重新检查",
   // Clicking the target address moves focus to the native grid; ArrowRight updates selection.
   await page.locator(".target-tags button").first().click();
   const grid = await page
-    .locator(".spreadsheet canvas:visible")
+    .locator(
+      '.spreadsheet canvas:visible:not([data-u-comp="formula-editor"] canvas)',
+    )
     .first()
     .boundingBox();
   await page.mouse.click(grid!.x + 46 + 3 * 118 + 32, grid!.y + 24 + 32 + 16);
   await page.keyboard.press("ArrowLeft");
   await expect(address).toHaveValue("C2");
-  await page
-    .getByRole("textbox", { name: "输入公式或数值", exact: true })
-    .fill("16");
+  await formulaInput(page).fill("16");
   await page.getByRole("button", { name: "写入", exact: true }).click();
   await expect(page.locator(".feedback.passed")).toHaveCount(0);
   await page.getByRole("button", { name: "重做本关", exact: true }).click();
@@ -108,9 +114,7 @@ test("键盘选格移动、修改后旧反馈失效，重置后可重新检查",
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),
   ).toBeEnabled();
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue("");
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", "");
   await writeFormula(page, "=B2*C2");
   await checkPassed(page);
 });

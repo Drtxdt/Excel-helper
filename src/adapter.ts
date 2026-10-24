@@ -1,5 +1,16 @@
 import { measured, performanceEnabled } from "./performance";
 import { createUniver, LocaleType, mergeLocales } from "@univerjs/presets";
+import {
+  inputIssue,
+  calculationAdvice,
+  type EditorState,
+} from "./input-diagnostics";
+import {
+  IEditorService,
+  ILayoutService,
+  InsertTextCommand,
+  IEditorBridgeService,
+} from "@univerjs/preset-sheets-core";
 import { UniverSheetsCorePreset } from "@univerjs/preset-sheets-core";
 import coreZh from "@univerjs/preset-sheets-core/locales/zh-CN";
 import { UniverSheetsFilterPreset } from "@univerjs/preset-sheets-filter";
@@ -33,14 +44,57 @@ export class SpreadsheetAdapter {
   private worker: Worker;
   private subscription: any;
   private selectionSubscription: any;
-  private onSelect?: (sheet: string, range: string, value: string) => void;
+  private subscriptions: { dispose(): void }[] = [];
+  private rendered: Promise<void>;
+  private editor: EditorState = {
+    active: false,
+    sheet: "",
+    cell: "",
+    text: "",
+    revision: 0,
+  };
+  private allowText?: string;
+  private composing = false;
+  private committing?: Promise<boolean>;
+  private editingChanged?: (editor: EditorState) => void;
+  private onSelect?: (
+    sheet: string,
+    range: string,
+    value: string,
+    error?: string,
+  ) => void;
   constructor(
-    container: HTMLElement,
+    private readonly container: HTMLElement,
     snapshot: WorkbookSnapshot,
     onChange: () => void,
-    onSelect?: (sheet: string, range: string, value: string) => void,
+    onSelect?: (
+      sheet: string,
+      range: string,
+      value: string,
+      error?: string,
+    ) => void,
+    editingChanged?: (editor: EditorState) => void,
   ) {
+    const compositionStart = () => {
+      this.composing = true;
+    };
+    const compositionEnd = () => {
+      this.composing = false;
+    };
+    container.addEventListener("compositionstart", compositionStart, true);
+    container.addEventListener("compositionend", compositionEnd, true);
+    this.subscriptions.push({
+      dispose: () => {
+        container.removeEventListener(
+          "compositionstart",
+          compositionStart,
+          true,
+        );
+        container.removeEventListener("compositionend", compositionEnd, true);
+      },
+    });
     this.onSelect = onSelect;
+    this.editingChanged = editingChanged;
     this.worker = new FormulaWorker();
     const { univer, univerAPI } = createUniver({
       locale: LocaleType.ZH_CN,
@@ -51,8 +105,8 @@ export class SpreadsheetAdapter {
         UniverSheetsCorePreset({
           container,
           workerURL: this.worker,
-          header: false,
-          toolbar: true,
+          header: true,
+          toolbar: false,
           formulaBar: true,
         }),
         UniverSheetsFilterPreset(),
@@ -63,24 +117,106 @@ export class SpreadsheetAdapter {
     });
     this.univer = univer;
     this.api = univerAPI;
+    this.rendered = new Promise<void>((resolve) => {
+      this.subscriptions.push(
+        this.api.addEvent(this.api.Event.LifeCycleChanged, ({ stage }: any) => {
+          if (stage >= this.api.Enum.LifecycleStages.Rendered) resolve();
+        }),
+      );
+    });
+    const publishEditor = (e: any, active: boolean, text?: string) => {
+      const location = this.univer
+        .__getInjector()
+        .get(IEditorBridgeService)
+        .getEditLocation();
+      this.editor = {
+        active,
+        sheet: location?.sheetId ?? e.worksheet.getSheetId(),
+        cell: e.worksheet.getRange(e.row, e.column, 1, 1).getA1Notation(),
+        text: text ?? this.editor.text,
+        revision: this.editor.revision + 1,
+        issue: active ? inputIssue(text ?? this.editor.text) : undefined,
+      };
+      this.editingChanged?.({ ...this.editor });
+    };
+    this.subscriptions.push(
+      this.api.addEvent(this.api.Event.SheetEditStarted, (e: any) =>
+        publishEditor(
+          e,
+          true,
+          e.worksheet.getRange(e.row, e.column, 1, 1).getFormula() ||
+            String(
+              e.worksheet.getRange(e.row, e.column, 1, 1).getValue() ?? "",
+            ),
+        ),
+      ),
+      this.api.addEvent(this.api.Event.SheetEditChanging, (e: any) =>
+        publishEditor(e, true, e.value.toPlainText()),
+      ),
+      this.api.addEvent(this.api.Event.BeforeSheetEditEnd, (e: any) => {
+        const text = e.value.toPlainText();
+        if (
+          e.isConfirm &&
+          inputIssue(text)?.code === "missing-equals" &&
+          this.allowText !== text
+        ) {
+          e.cancel = true;
+          publishEditor(e, true, text);
+        }
+      }),
+      this.api.addEvent(this.api.Event.SheetEditEnded, (e: any) => {
+        this.allowText = undefined;
+        publishEditor(e, false);
+        this.refreshSelection();
+      }),
+    );
     this.api.createWorkbook(JSON.parse(JSON.stringify(snapshot)));
     this.subscription = this.api.addEvent(
       this.api.Event.CommandExecuted,
       (e: any) => {
+        // Keyboard moves may mutate the selection object in place in Univer 1.2.
         if (
-          e.id?.includes("mutation") &&
+          e.id?.startsWith("sheet.command.move-selection") ||
+          e.options?.applyFormulaCalculationResult ||
+          e.id === "sheet.operation.set-selections"
+        )
+          this.refreshSelection();
+        if (
+          e.id?.startsWith("sheet.mutation.") &&
+          !e.options?.fromFormula &&
           !e.id.includes("formula-calculation") &&
           !e.id.includes("set-formula") &&
           !e.id.includes("selection")
         ) {
           onChange();
           this.refreshSelection();
+          if (performanceEnabled) {
+            const started = performance.now();
+            void this.wait()
+              .then(() => measured("recalculate", started))
+              .catch(() => {});
+          }
         }
       },
     );
     this.selectionSubscription = this.api.addEvent(
-      this.api.Event.SelectionChanged,
-      () => this.refreshSelection(),
+      this.api.Event.SelectionMoveEnd,
+      (e: any) => {
+        const range = e.selections.at(-1);
+        if (!range) return;
+        const r = e.worksheet.getRange(
+          range.startRow,
+          range.startColumn,
+          range.endRow - range.startRow + 1,
+          range.endColumn - range.startColumn + 1,
+        );
+        this.onSelect?.(
+          e.worksheet.getSheetId(),
+          r.getA1Notation(),
+          r.getFormula() || String(r.getValue() ?? ""),
+          r.getFormula() ? calculationAdvice(r.getValue()) : undefined,
+        );
+      },
     );
   }
   refreshSelection() {
@@ -91,6 +227,7 @@ export class SpreadsheetAdapter {
         s.getSheetId(),
         r.getA1Notation(),
         r.getFormula() || String(r.getValue() ?? ""),
+        r.getFormula() ? calculationAdvice(r.getValue()) : undefined,
       );
   }
   async fillDown(sheet: string, range: string) {
@@ -108,10 +245,63 @@ export class SpreadsheetAdapter {
     await first.autoFill(r, "COPY");
   }
   undo() {
-    this.api.undo();
+    return this.api.undo();
   }
   redo() {
-    this.api.redo();
+    return this.api.redo();
+  }
+  async ready() {
+    await this.rendered;
+    await this.wait();
+  }
+  startEditing() {
+    return this.api.getActiveWorkbook().startEditing();
+  }
+  async commit() {
+    if (this.composing) throw Error("输入法还在选字，确认文字后再写入或检查。");
+    if (this.committing) return this.committing;
+    const book = this.api.getActiveWorkbook();
+    if (!book.isCellEditing()) return true;
+    const target = { ...this.editor };
+    this.committing = book.endEditingAsync(true).then(() => {
+      const accepted = !book.isCellEditing();
+      if (
+        accepted &&
+        target.active &&
+        this.container.contains(document.activeElement)
+      )
+        this.focus(target.sheet, target.cell);
+      return accepted;
+    });
+    try {
+      return await this.committing!;
+    } finally {
+      this.committing = undefined;
+    }
+  }
+  async cancelEditing() {
+    return this.api.getActiveWorkbook().endEditingAsync(false);
+  }
+  async resolveInput(action: "equals" | "text" | "edit", revision: number) {
+    if (!this.editor.active || revision !== this.editor.revision) return;
+    const service = this.univer.__getInjector().get(IEditorService);
+    const editor = service.getEditor(service.getFocusId());
+    if (action === "text") {
+      this.allowText = this.editor.text;
+      await this.commit();
+    } else if (
+      action === "equals" &&
+      this.editor.issue?.code === "missing-equals"
+    ) {
+      if (editor) {
+        await this.api.executeCommand(InsertTextCommand.id, {
+          unitId: editor.getEditorId(),
+          body: { dataStream: "=" },
+          range: { startOffset: 0, endOffset: 0, collapsed: true },
+        });
+        editor.focus();
+      }
+    } else editor?.focus();
   }
   async wait() {
     await this.api.getFormula().onCalculationResultApplied(12000);
@@ -141,7 +331,13 @@ export class SpreadsheetAdapter {
   focus(sheet: string, range: string) {
     const s = this.api.getActiveWorkbook().getSheetBySheetId(sheet);
     this.api.getActiveWorkbook().setActiveSheet(s);
+    // While composing, sheet switches select references; the editing destination stays fixed.
+    if (this.editor.active) return;
     s.getRange(range).activate();
+    this.univer
+      .__getInjector()
+      .get(ILayoutService)
+      .focus(this.api.getActiveWorkbook().getId());
     this.onSelect?.(
       sheet,
       range,
@@ -326,6 +522,7 @@ export class SpreadsheetAdapter {
     };
   }
   dispose() {
+    this.subscriptions.forEach((s) => s.dispose());
     this.subscription?.dispose();
     this.selectionSubscription?.dispose();
     this.univer.dispose();

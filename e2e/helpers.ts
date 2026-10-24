@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { test as base, expect, type Page } from "@playwright/test";
 
 // Fail on uncaught application/Worker errors instead of accepting a partial UI.
@@ -32,12 +33,8 @@ export async function openLesson(page: Page, id: string) {
   await page.locator(".target-tags button").first().click();
 }
 export async function writeFormula(page: Page, formula: string) {
-  await page
-    .getByRole("textbox", { name: "输入公式或数值", exact: true })
-    .fill(formula);
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue(formula);
+  await formulaInput(page).fill(formula);
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", formula);
   await page.getByRole("button", { name: "写入", exact: true }).click();
   await expect(page.locator(".toolbar-note")).toContainText(formula);
 }

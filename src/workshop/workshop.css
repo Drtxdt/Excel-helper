@@ -70,7 +70,7 @@
   gap: 5px;
   flex-wrap: wrap;
 }
-.target-tags button {
+.target-tags button:not(.spreadsheet *) {
   font-size: 14px;
   padding: 3px 6px;
   background: #ffefc9;
@@ -81,7 +81,7 @@
   display: flex;
   gap: 7px;
 }
-.task-actions .button {
+.task-actions .button:not(.spreadsheet *) {
   padding: 9px 12px;
   font-size: 14px;
 }
@@ -92,7 +92,7 @@
   border-top: 1px solid var(--line);
   padding-top: 15px;
 }
-.task-bottom button {
+.task-bottom button:not(.spreadsheet *) {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -174,14 +174,14 @@
   gap: 6px;
   white-space: nowrap;
 }
-.entry-bar input {
+.entry-bar input:not(.spreadsheet *) {
   padding: 5px 8px;
   font-size: 14px;
 }
-.entry-bar > input {
+.entry-bar > input:not(.spreadsheet *) {
   flex: 1;
 }
-.entry-bar button {
+.entry-bar button:not(.spreadsheet *) {
   background: #eaf1e6;
   border: 1px solid #d5dfcf;
   border-radius: 5px;
@@ -291,8 +291,8 @@
   display: block;
   margin: 10px 0;
 }
-.help-panel input,
-.help-panel select {
+.help-panel input:not(.spreadsheet *),
+.help-panel select:not(.spreadsheet *) {
   display: block;
   width: 100%;
   margin-top: 5px;
@@ -333,7 +333,7 @@
   font-size: 14px;
   color: #8b907b;
 }
-.feedback .button {
+.feedback .button:not(.spreadsheet *) {
   margin-top: 12px;
   width: 100%;
   font-size: 14px;
@@ -367,13 +367,13 @@
   gap: 7px;
   align-items: center;
 }
-.operation-tools input {
+.operation-tools input:not(.spreadsheet *) {
   max-width: 150px;
 }
-.operation-tools input[type="number"] {
+.operation-tools input:not(.spreadsheet *)[type="number"] {
   width: 70px;
 }
-.operation-tools .button {
+.operation-tools .button:not(.spreadsheet *) {
   padding: 6px 10px;
   font-size: 14px;
 }
@@ -432,13 +432,13 @@
 .workshop-actions .guide-button {
   margin-left: auto;
 }
-.workshop button,
-.workshop input,
-.workshop select,
-.focus-dialog button {
+.workshop button:not(.spreadsheet *),
+.workshop input:not(.spreadsheet *),
+.workshop select:not(.spreadsheet *),
+.focus-dialog button:not(.spreadsheet *) {
   min-height: 44px;
 }
-.workshop button:disabled {
+.workshop button:not(.spreadsheet *):disabled {
   cursor: not-allowed;
 }
 .workshop .phase-label {
@@ -451,7 +451,7 @@
   color: #713c2c;
   flex-shrink: 0;
 }
-.workshop .session-error button {
+.workshop .session-error button:not(.spreadsheet *) {
   margin-left: 14px;
   text-decoration: underline;
 }
@@ -476,7 +476,7 @@
   gap: 8px;
   padding: 6px 12px;
 }
-.workshop .entry-bar input {
+.workshop .entry-bar input:not(.spreadsheet *) {
   font-size: 16px;
 }
 .learning-toolbar {
@@ -491,7 +491,7 @@
   color: #526451;
   flex-shrink: 0;
 }
-.learning-toolbar button {
+.learning-toolbar button:not(.spreadsheet *) {
   color: #32664f;
   padding: 4px 8px;
 }
@@ -513,11 +513,11 @@
   gap: 6px;
   overflow-x: auto;
 }
-.worksheet-switch button {
+.worksheet-switch button:not(.spreadsheet *) {
   border-bottom: 3px solid transparent;
   white-space: nowrap;
 }
-.worksheet-switch button[aria-pressed="true"] {
+.worksheet-switch button:not(.spreadsheet *)[aria-pressed="true"] {
   border-bottom-color: #32664f;
   font-weight: 700;
   background: #eef4e9;
@@ -543,7 +543,7 @@
 .compact-feedback .feedback {
   margin: 8px 12px;
 }
-.compact-feedback .feedback .button {
+.compact-feedback .feedback .button:not(.spreadsheet *) {
   width: auto;
   margin: 0 0 0 16px;
 }
@@ -636,7 +636,7 @@
   }
 }
 @media (pointer: coarse) {
-  .workshop button {
+  .workshop button:not(.spreadsheet *) {
     touch-action: manipulation;
   }
 }
@@ -655,4 +655,30 @@
     height: auto;
     min-height: 54px;
   }
+}
+
+.input-advice {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: #fff4d8;
+  font-size: 14px;
+}
+.input-advice p {
+  margin: 0;
+}
+.input-advice button {
+  color: #32664f;
+  text-decoration: underline;
+  margin-right: 16px;
+}
+
+.input-function-help {
+  padding: 8px 14px;
+  font-size: 14px;
+  max-height: 180px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+.input-function-help summary {
+  cursor: pointer;
 }

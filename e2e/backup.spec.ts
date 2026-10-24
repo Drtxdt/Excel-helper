@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { readFile } from "node:fs/promises";
 import {
   test,
@@ -48,9 +49,10 @@ test("真实导出、跨浏览器上下文导入、损坏文件隔离及导入�
     await expect(
       restored.getByRole("button", { name: "写入", exact: true }),
     ).toBeEnabled();
-    await expect(
-      restored.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-    ).toHaveValue("=B2*C2");
+    await expect(formulaInput(restored).value).toHaveAttribute(
+      "data-value",
+      "=B2*C2",
+    );
     await dismissGuide(restored);
     await checkPassed(restored);
     await waitSaved(restored);

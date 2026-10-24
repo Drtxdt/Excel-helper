@@ -17,27 +17,27 @@
 body {
   margin: 0;
 }
-button,
-input,
-select {
+button:not(.spreadsheet *),
+input:not(.spreadsheet *),
+select:not(.spreadsheet *) {
   font: inherit;
 }
-button,
+button:not(.spreadsheet *),
 a,
-input,
-select {
+input:not(.spreadsheet *),
+select:not(.spreadsheet *) {
   outline-offset: 4px;
 }
-button:focus-visible,
+button:not(.spreadsheet *):focus-visible,
 a:focus-visible,
-input:focus-visible,
-select:focus-visible {
+input:not(.spreadsheet *):focus-visible,
+select:not(.spreadsheet *):focus-visible {
   outline: 3px solid #d3a546;
 }
-button {
+button:not(.spreadsheet *) {
   cursor: pointer;
 }
-button:disabled {
+button:not(.spreadsheet *):disabled {
   cursor: wait;
   opacity: 0.5;
 }
@@ -45,7 +45,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
-button {
+button:not(.spreadsheet *) {
   color: inherit;
 }
 h1,
@@ -69,8 +69,8 @@ h3 {
 p {
   line-height: 1.8;
 }
-input,
-select {
+input:not(.spreadsheet *),
+select:not(.spreadsheet *) {
   border: 1px solid #d4ddd4;
   background: #fff;
   border-radius: 6px;
@@ -81,7 +81,7 @@ code {
   font-family: Consolas, "Cascadia Code", monospace;
   overflow-wrap: anywhere;
 }
-button {
+button:not(.spreadsheet *) {
   border: 0;
   background: transparent;
 }
@@ -192,7 +192,7 @@ button {
   font-size: 14px;
   padding: 4px 0;
 }
-.button {
+.button:not(.spreadsheet *) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -206,7 +206,7 @@ button {
     background 0.15s,
     transform 0.15s;
 }
-.button:hover {
+.button:not(.spreadsheet *):hover {
   transform: translateY(-1px);
 }
 .primary {
@@ -406,7 +406,7 @@ button {
   border-radius: 7px;
   padding: 5px 10px;
 }
-.search-field input {
+.search-field input:not(.spreadsheet *) {
   border: 0;
   width: 230px;
 }
@@ -662,4 +662,10 @@ button {
     flex-wrap: wrap;
   }
 }
- .case-return{padding:10px 24px;background:#fff4d1;font-size:14px;display:block;flex-shrink:0}
+.case-return {
+  padding: 10px 24px;
+  background: #fff4d1;
+  font-size: 14px;
+  display: block;
+  flex-shrink: 0;
+}
