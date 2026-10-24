@@ -7,6 +7,12 @@ const route = useRoute();
 const lesson = computed(() => lessons.find((l) => l.id === route.params.id));
 </script>
 <template>
+  <RouterLink
+    v-if="route.query.fromCase === 'case-017'"
+    class="case-return"
+    to="/case/case-017"
+    >← 返回第 17 箱货物调查（调查进度已保留）</RouterLink
+  >
   <WorkshopSession v-if="lesson" :key="lesson.id" :lesson="lesson" />
   <main v-else class="page-width">
     <h1>没有找到这项任务</h1>

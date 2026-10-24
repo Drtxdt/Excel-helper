@@ -5,7 +5,8 @@ import type { LessonDefinition } from "../../types";
 import type { OperationInput } from "../../operations";
 import OperationTools from "./OperationTools.vue";
 defineProps<{
-  lesson: LessonDefinition;
+  lesson: Pick<LessonDefinition, "sheets" | "operation"> & { number?: number };
+  allowFill?: boolean;
   ready: boolean;
   variant: number;
   failed: boolean;
@@ -101,7 +102,7 @@ function enter(event: KeyboardEvent) {
     <div class="learning-toolbar">
       <button @click="history('undo')" :disabled="!ready">↶ 撤销</button
       ><button @click="history('redo')" :disabled="!ready">↷ 重做</button
-      ><template v-if="lesson.number >= 7"
+      ><template v-if="allowFill || (lesson.number ?? 0) >= 7"
         ><span class="fill-instruction">地址栏可输入区域</span
         ><button @click="fill" :disabled="!ready">↓ 向下填充</button></template
       ><span class="toolbar-note"
