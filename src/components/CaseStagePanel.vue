@@ -39,6 +39,7 @@ function openTrace(e: MouseEvent) {
   traceSelection();
   showTrace.value = true;
 }
+defineExpose({ commit: () => session.commit() });
 </script>
 <template>
   <section class="case-stage" :aria-label="stage.title">
@@ -75,6 +76,13 @@ function openTrace(e: MouseEvent) {
       <ul v-if="ui.result.diagnostics.length">
         <li v-for="(d, i) in ui.result.diagnostics.slice(0, 4)" :key="i">
           {{ d.variant ? d.variant + "：" : "" }}{{ d.message }}
+          <button
+            v-if="d.action === 'locate'"
+            class="text-button"
+            @click="session.focus(d.cell.split('!')[0], d.cell.split('!')[1])"
+          >
+            定位到 {{ d.cell }}
+          </button>
         </li>
       </ul>
       <span v-else
@@ -86,13 +94,17 @@ function openTrace(e: MouseEvent) {
       :lesson="stage"
       :allow-fill="true"
       :ready="ui.ready"
+      :committing="ui.committing"
       :variant="-1"
       :failed="ui.phase === 'error'"
       v-model:cell="ui.cell"
       v-model:value="ui.value"
       v-model:sheet="ui.sheet"
       @mount="mount"
-      @write="(s, c, v) => session.write(s, c, v)"
+      @write="session.commit()"
+      :editor="ui.editor"
+      :calculation-error="ui.calculationError"
+      @resolve="(action, revision) => session.resolveInput(action, revision)"
       @fill="(s, r) => session.fill(s, r)"
       @focus="(s, c) => session.focus(s, c)"
       @undo="session.undo()"
@@ -102,7 +114,7 @@ function openTrace(e: MouseEvent) {
       @trace="openTrace"
     />
     <FocusDialog
-      v-if="help"
+      v-if="help && ui.ready"
       title="先找一个突破口"
       kind="drawer"
       :return-focus="opener"
@@ -155,7 +167,7 @@ function openTrace(e: MouseEvent) {
       </div>
     </FocusDialog>
     <FocusDialog
-      v-if="showTrace"
+      v-if="showTrace && ui.ready"
       title="这格引用了哪里"
       kind="drawer"
       :return-focus="opener"

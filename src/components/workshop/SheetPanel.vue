@@ -3,11 +3,15 @@ import { ref, onMounted, watch } from "vue";
 import { Search } from "lucide-vue-next";
 import type { LessonDefinition } from "../../types";
 import type { OperationInput } from "../../operations";
+import type { EditorState } from "../../input-diagnostics";
 import OperationTools from "./OperationTools.vue";
 defineProps<{
   lesson: Pick<LessonDefinition, "sheets" | "operation"> & { number?: number };
   allowFill?: boolean;
+  editor?: EditorState;
+  calculationError?: string;
   ready: boolean;
+  committing?: boolean;
   variant: number;
   failed: boolean;
 }>();
@@ -16,7 +20,8 @@ const cell = defineModel<string>("cell", { required: true }),
   sheet = defineModel<string>("sheet", { required: true });
 const emit = defineEmits<{
   mount: [element: HTMLElement];
-  write: [sheet: string, cell: string, value: string];
+  write: [];
+  resolve: [action: "equals" | "text" | "edit", revision: number];
   fill: [sheet: string, range: string];
   undo: [];
   redo: [];
@@ -26,31 +31,27 @@ const emit = defineEmits<{
   retry: [];
   operate: [input: OperationInput];
 }>();
-// Input drafts are separate from the engine selection. A delayed recalculation
-// must not replace a range the learner is typing with the previous selected cell.
-const draftCell = ref(cell.value),
-  draftValue = ref(value.value),
-  editingValue = ref(false);
+const draftCell = ref(cell.value);
+const addressEditing = ref(false);
 watch([cell, sheet], () => {
-  draftCell.value = cell.value;
-  draftValue.value = value.value;
-  editingValue.value = false;
+  if (!addressEditing.value) draftCell.value = cell.value;
 });
-watch(value, (v) => {
-  if (!editingValue.value) draftValue.value = v;
-});
-function write() {
-  const destination = draftCell.value,
-    content = draftValue.value;
-  editingValue.value = false;
-  emit("write", sheet.value, destination, content);
+let fillRange: string | undefined;
+function keepEditorFocus(event: PointerEvent) {
+  // WebKit suppresses the following click when touch pointerdown is cancelled.
+  if (event.pointerType === "mouse") event.preventDefault();
+}
+function captureFill(event: PointerEvent) {
+  fillRange = draftCell.value;
+  keepEditorFocus(event);
 }
 function fill() {
-  editingValue.value = false;
-  emit("fill", sheet.value, draftCell.value);
+  const range = fillRange ?? draftCell.value;
+  fillRange = undefined;
+  addressEditing.value = false;
+  emit("fill", sheet.value, range);
 }
 function history(kind: "undo" | "redo") {
-  editingValue.value = false;
   if (kind === "undo") emit("undo");
   else emit("redo");
 }
@@ -58,9 +59,6 @@ const host = ref<HTMLElement>();
 onMounted(() => {
   if (host.value) emit("mount", host.value);
 });
-function enter(event: KeyboardEvent) {
-  if (!event.isComposing) write();
-}
 </script>
 <template>
   <section class="sheet-panel" aria-label="表格操作区">
@@ -82,33 +80,80 @@ function enter(event: KeyboardEvent) {
           v-model="draftCell"
           aria-label="单元格地址"
           class="address-input"
-          @keydown.enter="emit('focus', sheet, draftCell)"
-          :disabled="!ready"
+          @focus="addressEditing = true"
+          @blur="addressEditing = false"
+          @keydown.enter.stop.prevent="emit('focus', sheet, draftCell)"
+          :disabled="!ready || committing"
       /></label>
-      <span class="fx" aria-hidden="true">fx</span
-      ><input
-        v-model="draftValue"
-        @input="editingValue = true"
-        aria-label="输入公式或数值"
-        placeholder="输入公式或数值，再点写入"
-        @keydown.enter="enter"
-        :disabled="!ready"
-        autocomplete="off"
-        autocapitalize="off"
-        :spellcheck="false"
-      />
-      <button @click="write" :disabled="!ready">写入</button>
+      <span class="muted">在下方公式栏或单元格中输入</span>
+      <button
+        @pointerdown="keepEditorFocus"
+        @click="emit('write')"
+        :disabled="!ready || committing"
+      >
+        写入
+      </button>
     </div>
     <div class="learning-toolbar">
-      <button @click="history('undo')" :disabled="!ready">↶ 撤销</button
-      ><button @click="history('redo')" :disabled="!ready">↷ 重做</button
+      <button @click="history('undo')" :disabled="!ready || committing">
+        ↶ 撤销</button
+      ><button @click="history('redo')" :disabled="!ready || committing">
+        ↷ 重做</button
       ><template v-if="allowFill || (lesson.number ?? 0) >= 7"
         ><span class="fill-instruction">地址栏可输入区域</span
-        ><button @click="fill" :disabled="!ready">↓ 向下填充</button></template
-      ><span class="toolbar-note"
-        >{{ cell }}<template v-if="value"> · {{ value }}</template></span
+        ><button
+          @pointerdown="captureFill"
+          @click="fill"
+          :disabled="!ready || committing"
+        >
+          ↓ 向下填充
+        </button></template
+      ><span
+        class="toolbar-note"
+        :data-value="editor?.active ? editor.text : value"
+        >{{ editor?.active ? editor.cell : cell
+        }}<template v-if="editor?.active ? editor.text : value">
+          · {{ editor?.active ? editor.text : value }}</template
+        ></span
       >
     </div>
+    <div
+      v-if="editor?.active && editor.issue"
+      class="input-advice"
+      role="status"
+      aria-live="polite"
+    >
+      <p>
+        <strong>{{ editor.cell }}</strong> · {{ editor.issue.message }}
+      </p>
+      <template v-if="editor.issue.code === 'missing-equals'">
+        <button
+          @pointerdown="keepEditorFocus"
+          @click="emit('resolve', 'equals', editor.revision)"
+        >
+          补上 =
+        </button>
+        <button
+          @pointerdown="keepEditorFocus"
+          @click="emit('resolve', 'text', editor.revision)"
+        >
+          按文字写入
+        </button>
+      </template>
+      <button
+        @pointerdown="keepEditorFocus"
+        @click="emit('resolve', 'edit', editor.revision)"
+      >
+        继续修改
+      </button>
+    </div>
+    <p
+      v-if="!editor?.active && calculationError"
+      class="input-advice"
+      role="status"
+    >
+      {{ cell }}：{{ calculationError }}
+    </p>
     <div ref="host" class="spreadsheet" aria-label="可编辑工作簿" />
     <div v-if="!ready" class="sheet-loading" role="status">
       <template v-if="failed"
@@ -123,13 +168,14 @@ function enter(event: KeyboardEvent) {
           v-for="s in lesson.sheets"
           :key="s.id"
           :aria-pressed="sheet === s.id"
-          :disabled="!ready"
+          :disabled="!ready || committing"
+          @pointerdown="keepEditorFocus"
           @click="emit('focus', s.id, 'A2')"
         >
           {{ s.name }}
         </button>
       </div>
-      <span class="edit-note">选格 → 输入 → 写入</span
+      <span class="edit-note">选格 → 输入 → Enter 或写入</span
       ><button class="text-button" @click="$emit('help', $event)">
         提示与解法
       </button>

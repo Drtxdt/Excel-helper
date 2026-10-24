@@ -15,9 +15,14 @@ defineEmits<{ close: [] }>();
         <strong>选一格。</strong
         >点表格里的单元格，或点任务中的地址。平板轻点即可，不用双击。
       </li>
-      <li><strong>输入内容。</strong>在上方公式栏输入，公式从等号开始。</li>
       <li>
-        <strong>确认写入。</strong>点“写入”或按 Enter，表格才会收到这次修改。
+        <strong>输入内容。</strong
+        >直接在选中的格子打字，或在公式栏输入。公式从等号开始；输入 =SU 可以选择
+        SUM。
+      </li>
+      <li>
+        <strong>确认写入。</strong>点“写入”或按 Enter 确认。双击或 F2
+        修改原内容，Escape 取消。
       </li>
       <li>
         <strong>检查作答。</strong

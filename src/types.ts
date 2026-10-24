@@ -97,6 +97,8 @@ export interface WorkbookSnapshot {
   [key: string]: any;
 }
 export interface Diagnostic {
+  code?: "missing-equals" | "syntax" | "formula-error" | "result-mismatch";
+  action?: "locate";
   cell: string;
   expected: CellValue;
   actual: CellValue;

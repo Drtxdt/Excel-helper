@@ -15,6 +15,7 @@ import { createCaseStorage } from "../cases/storage";
 import type { WorkbookSnapshot } from "../types";
 import CaseStagePanel from "../components/CaseStagePanel.vue";
 import "../cases/case.css";
+const stagePanel = ref<InstanceType<typeof CaseStagePanel>>();
 const progress = ref(freshCase(definition)),
   loaded = ref(false),
   saved = ref(""),
@@ -73,7 +74,8 @@ function passed(i: number, b: WorkbookSnapshot) {
   feedback.value = "";
   void save();
 }
-function select(i: number) {
+async function select(i: number) {
+  if (stagePanel.value && !(await stagePanel.value.commit())) return;
   if (i <= progress.value.unlocked) {
     progress.value.active = i;
     void save();
@@ -84,11 +86,13 @@ function hint() {
   p.hints = Math.min(4, p.hints + 1);
   void save();
 }
-function submit() {
+async function submit() {
+  if (stagePanel.value && !(await stagePanel.value.commit())) return;
   feedback.value = conclude(definition, progress.value);
   void save();
 }
-function exportCase() {
+async function exportCase() {
+  if (stagePanel.value && !(await stagePanel.value.commit())) return;
   const blob = new Blob(
     [
       JSON.stringify(
@@ -227,6 +231,7 @@ function exportCase() {
         </details>
       </aside>
       <CaseStagePanel
+        ref="stagePanel"
         :key="stage.id"
         :stage="stage"
         :case-id="definition.id"

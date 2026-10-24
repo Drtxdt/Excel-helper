@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import type { Page } from "@playwright/test";
 import { test, expect, waitSaved, dismissGuide } from "./helpers";
 async function open(page: Page, id: string) {
@@ -35,9 +36,7 @@ test("排序筛选检查实际范围、可见行与整行数据，刷新后规�
   await page
     .getByRole("textbox", { name: "单元格地址", exact: true })
     .fill("D2");
-  await page
-    .getByRole("textbox", { name: "输入公式或数值", exact: true })
-    .fill("取消");
+  await formulaInput(page).fill("取消");
   await page.getByRole("button", { name: "写入", exact: true }).click();
   await check(page, false);
   await expect(page.locator(".feedback.incorrect")).toContainText("字段错位");
@@ -91,11 +90,18 @@ test("数据验证逐格检查范围并实际拒绝列表外输入", async ({ pa
   await page
     .getByRole("textbox", { name: "单元格地址", exact: true })
     .fill("D6");
-  await page
-    .getByRole("textbox", { name: "输入公式或数值", exact: true })
-    .fill("已经发货");
+  await formulaInput(page).fill("已经发货");
+  // Native list cells open a searchable picker: unmatched text is not a cell edit.
+  await expect(page.locator("input:focus")).toHaveValue("已经发货");
   await page.getByRole("button", { name: "写入", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("只允许列表中的值");
+  await expect(formulaInput(page).value).toHaveAttribute(
+    "data-value",
+    "待发货",
+  );
+  await formulaInput(page).fill("取消");
+  await page.getByText("取消", { exact: true }).click();
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", "取消");
+  await waitSaved(page);
   await page.reload();
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),

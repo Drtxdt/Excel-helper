@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { readFile } from "node:fs/promises";
 import { test, expect, writeFormula } from "./helpers";
 test("统一备份恢复案件草稿、线索和提示；旧课程备份保留案件", async ({
@@ -26,7 +27,10 @@ test("统一备份恢复案件草稿、线索和提示；旧课程备份保留�
   const path = info.outputPath("unified.json");
   await (await downloading).saveAs(path);
   const data = JSON.parse(await readFile(path, "utf8"));
-  await page.screenshot({ path: info.outputPath("unified-records.png"), fullPage: true });
+  await page.screenshot({
+    path: info.outputPath("unified-records.png"),
+    fullPage: true,
+  });
   expect(data.version).toBe(2);
   expect(data.cases[0].stages[0].hints).toBe(1);
   const context = await browser.newContext({
@@ -37,27 +41,26 @@ test("统一备份恢复案件草稿、线索和提示；旧课程备份保留�
     await target.goto("/#/records");
     await target.locator("input[type=file]").setInputFiles(path);
     await expect(target.getByRole("status")).toContainText("备份已恢复");
-    await target
-      .locator("input[type=file]")
-      .setInputFiles({
-        name: "old.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(
-          JSON.stringify({
-            format: "supply-station",
-            version: 1,
-            exportedAt: "now",
-            records: [],
-          }),
-        ),
-      });
+    await target.locator("input[type=file]").setInputFiles({
+      name: "old.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({
+          format: "supply-station",
+          version: 1,
+          exportedAt: "now",
+          records: [],
+        }),
+      ),
+    });
     await expect(target.getByRole("status")).toContainText("备份已恢复");
     await target
       .getByRole("link", { name: "消失的第 17 箱货物", exact: true })
       .click();
-    await expect(
-      target.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-    ).toHaveValue("=SUMIF(签收!A2:A17,A2,签收!B2:B17)");
+    await expect(formulaInput(target).value).toHaveAttribute(
+      "data-value",
+      "=SUMIF(签收!A2:A17,A2,签收!B2:B17)",
+    );
     await target.getByRole("button", { name: "调查提示", exact: true }).click();
     await expect(
       target.getByRole("button", { name: "再看一个提示", exact: true }),
@@ -67,4 +70,3 @@ test("统一备份恢复案件草稿、线索和提示；旧课程备份保留�
     await context.close();
   }
 });
-

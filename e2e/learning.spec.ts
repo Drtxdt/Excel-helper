@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import {
   test,
   expect,
@@ -27,9 +28,10 @@ test("引用公式经过独立变式判题；固定结果被拦截，提示可�
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),
   ).toBeEnabled();
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue("=B2*C2");
+  await expect(formulaInput(page).value).toHaveAttribute(
+    "data-value",
+    "=B2*C2",
+  );
   await checkPassed(page);
 });
 
@@ -51,9 +53,7 @@ test("原生填充的共享公式在刷新后仍能通过变式检查", async ({
   await expect(
     page.getByRole("button", { name: "写入", exact: true }),
   ).toBeEnabled();
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue("");
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", "");
   await writeFormula(page, "=B2*C2");
   await page
     .getByRole("textbox", { name: "单元格地址", exact: true })
@@ -68,15 +68,13 @@ test("原生填充的共享公式在刷新后仍能通过变式检查", async ({
 test("公式栏支持 Enter、撤销和重做", async ({ page }) => {
   await openLesson(page, "02");
   await writeFormula(page, "=B2*C2");
-  const input = page.getByRole("textbox", {
-    name: "输入公式或数值",
-    exact: true,
-  });
+  const input = formulaInput(page);
   await input.fill("=0");
   await input.press("Enter");
+  await page.locator(".target-tags button").first().click();
   await expect(page.locator(".toolbar-note")).toContainText("=0");
   await page.getByRole("button", { name: "↶ 撤销", exact: true }).click();
-  await expect(input).toHaveValue("=B2*C2");
+  await expect(input.value).toHaveAttribute("data-value", "=B2*C2");
   await page.getByRole("button", { name: "↷ 重做", exact: true }).click();
-  await expect(input).toHaveValue("=0");
+  await expect(input.value).toHaveAttribute("data-value", "=0");
 });

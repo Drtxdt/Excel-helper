@@ -82,8 +82,10 @@ try {
           cell,
         );
         await page
-          .getByRole("textbox", { name: "输入公式或数值", exact: true })
-          .fill(formula);
+          .locator('[data-u-comp="formula-bar"] [data-u-comp="formula-editor"]')
+          .click();
+        await page.keyboard.press("ControlOrMeta+a");
+        await page.keyboard.insertText(formula);
         const previous = await page.evaluate(
           () => performance.getEntriesByName("supply:recalculate").length,
         );

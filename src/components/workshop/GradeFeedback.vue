@@ -8,6 +8,7 @@ defineProps<{
   variant: number;
   usedHelp: boolean;
 }>();
+defineEmits<{ focus: [sheet: string, cell: string] }>();
 </script>
 <template>
   <section
@@ -48,6 +49,13 @@ defineProps<{
       >
         <small v-if="d.variant">换数据 · {{ d.variant }}</small>
         <p>{{ d.message }}</p>
+        <button
+          v-if="d.action === 'locate'"
+          class="text-button"
+          @click="$emit('focus', d.cell.split('!')[0], d.cell.split('!')[1])"
+        >
+          定位到 {{ d.cell }}
+        </button>
       </div>
       <small v-if="result.diagnostics.length > 5"
         >先处理这几处，再重新检查。</small

@@ -1,3 +1,4 @@
+import { formulaInput } from "./native-editor";
 import { test, expect, writeFormula, dismissGuide } from "./helpers";
 import type { Page } from "@playwright/test";
 
@@ -113,11 +114,11 @@ test("调查提示链接到练习，再返回时保留草稿和提示记录", as
   await page.getByRole("link", { name: "去练习相关公式 →" }).click();
   await dismissGuide(page);
   await page
-    .getByRole("link", { name: "← 返回消失的第 17 箱货物调查（调查进度已保留）" })
+    .getByRole("link", {
+      name: "← 返回消失的第 17 箱货物调查（调查进度已保留）",
+    })
     .click();
-  await expect(
-    page.getByRole("textbox", { name: "输入公式或数值", exact: true }),
-  ).toHaveValue("=45");
+  await expect(formulaInput(page).value).toHaveAttribute("data-value", "=45");
   await page.getByRole("button", { name: "调查提示", exact: true }).click();
   await expect(
     page.getByText("先看两张表共有哪一列。行号相同，不代表是同一箱。", {

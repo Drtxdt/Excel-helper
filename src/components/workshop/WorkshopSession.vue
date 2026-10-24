@@ -151,6 +151,7 @@ const phaseText = computed(
         :lesson="lesson"
         :variant="variant"
         :ready="ui.ready"
+        :committing="ui.committing"
         :result="ui.result"
         :used-help="usedHelp"
         @focus="(sheet, cell) => session.focus(sheet, cell)"
@@ -161,13 +162,17 @@ const phaseText = computed(
       <SheetPanel
         :lesson="lesson"
         :ready="ui.ready"
+        :committing="ui.committing"
         :variant="variant"
         :failed="ui.phase === 'error'"
         v-model:cell="ui.cell"
         v-model:value="ui.value"
         v-model:sheet="ui.sheet"
         @mount="mount"
-        @write="(sheet, cell, value) => session.write(sheet, cell, value)"
+        @write="session.commit()"
+        :editor="ui.editor"
+        :calculation-error="ui.calculationError"
+        @resolve="(action, revision) => session.resolveInput(action, revision)"
         @fill="(sheet, range) => session.fill(sheet, range)"
         @undo="session.undo()"
         @redo="session.redo()"
@@ -179,6 +184,7 @@ const phaseText = computed(
       >
         <div v-if="collapsed && ui.result" class="compact-feedback">
           <GradeFeedback
+            @focus="(s, c) => session.focus(s, c)"
             :lesson="lesson"
             :variant="variant"
             :result="ui.result"
@@ -189,7 +195,7 @@ const phaseText = computed(
     </div>
     <HelpDrawer
       :return-focus="returnFocus"
-      v-if="tab"
+      v-if="tab && ui.ready"
       :lesson="lesson"
       :tab="tab"
       :hint-count="hintCount"
@@ -205,7 +211,7 @@ const phaseText = computed(
     />
     <FocusDialog
       :return-focus="returnFocus"
-      v-if="resetOpen"
+      v-if="resetOpen && ui.ready"
       title="重新做这份任务？"
       @close="resetOpen = false"
       ><p>当前草稿会恢复为初始数据，已完成的记录保留。</p>
@@ -223,9 +229,10 @@ const phaseText = computed(
         </button>
       </div></FocusDialog
     >
+    <!-- Mount native editors before a modal makes the workbook inert. -->
     <OperationGuide
       :return-focus="returnFocus"
-      v-if="guideOpen"
+      v-if="guideOpen && ui.ready"
       @close="closeGuide"
     />
   </main>
