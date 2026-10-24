@@ -93,12 +93,13 @@ test("数据验证逐格检查范围并实际拒绝列表外输入", async ({ pa
   await formulaInput(page).fill("已经发货");
   // Native list cells open a searchable picker: unmatched text is not a cell edit.
   await expect(page.locator("input:focus")).toHaveValue("已经发货");
-  await page.getByRole("button", { name: "写入", exact: true }).click();
+  await expect(page.getByText("已经发货", { exact: true })).toHaveCount(0);
   await expect(formulaInput(page).value).toHaveAttribute(
     "data-value",
     "待发货",
   );
-  await formulaInput(page).fill("取消");
+  // Search the same open picker, rather than sending Enter to its host cell.
+  await page.locator("input:focus").fill("取消");
   await page.getByText("取消", { exact: true }).click();
   await expect(formulaInput(page).value).toHaveAttribute("data-value", "取消");
   await waitSaved(page);
