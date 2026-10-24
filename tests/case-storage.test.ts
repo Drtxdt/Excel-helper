@@ -25,15 +25,15 @@ test("损坏的案件记录不被新作答静默覆盖", async () => {
   await store.close();
   const db = await openDB(name, 1);
   await db.put(
-    "cases",
+    "settings",
     { revision: 4, progress: { caseId: "broken" } },
-    case017.id,
+    "case:" + case017.id,
   );
   const next = createCaseStorage(case017, name);
   await expect(next.load()).rejects.toThrow();
   const clean = createCaseStorage(case017, name + "-fresh");
   await expect(next.save(await clean.load())).rejects.toThrow("尚未读取");
-  expect((await db.get("cases", case017.id)).revision).toBe(4);
+  expect((await db.get("settings", "case:" + case017.id)).revision).toBe(4);
   db.close();
   await next.close();
   await clean.close();
