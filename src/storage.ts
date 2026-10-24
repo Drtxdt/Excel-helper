@@ -3,7 +3,7 @@ import { z } from "zod";
 import { normalizeRecord } from "./learning";
 import type { LearningRecord } from "./types";
 
-const draftSchema = z
+export const draftSchema = z
   .object({
     id: z.string(),
     sheetOrder: z.array(z.string()),

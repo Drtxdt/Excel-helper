@@ -22,6 +22,10 @@ for (const l of lessons) {
   );
 }
 const deps = JSON.parse(fs.readFileSync("package.json", "utf8")).dependencies;
+const investigation = JSON.parse(fs.readFileSync("src/cases/case-017.json", "utf8"));
+assert.equal(investigation.id, "case-017");
+assert.ok(investigation.source && investigation.license);
+assert.ok(!/(在当今数字化时代|激动人心的探索之旅|敬请期待|原型占位)/.test(JSON.stringify(investigation)));
 assert.ok(!Object.keys(deps).some((k) => k.includes("univerjs-pro")));
 assert.ok(
   Object.entries(deps)

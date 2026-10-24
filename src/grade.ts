@@ -1,8 +1,8 @@
-import type { GradeResult, LessonDefinition, WorkbookSnapshot } from "./types";
+import type { GradeResult, CalculationTask, WorkbookSnapshot } from "./types";
 import { calculate } from "./headless";
 import { address, cell, equal, put } from "./workbook";
 export async function grade(
-  l: LessonDefinition,
+  l: CalculationTask,
   input: WorkbookSnapshot,
   revision = 0,
 ): Promise<GradeResult> {

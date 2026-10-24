@@ -1,0 +1,860 @@
+{
+  "id": "case-017",
+  "version": 1,
+  "title": "消失的第 17 箱货物",
+  "brief": "17 箱出库，16 箱签收。差的那一箱，是真的丢了，还是漏在另一张表里？",
+  "source": "本站原创虚构案件与数据；不含私人资料。",
+  "license": "MIT",
+  "stages": [
+    {
+      "id": "case-017-reconcile",
+      "title": "先把缺口找出来",
+      "brief": "出库登记有 17 箱，常规签收汇总只有 16 箱。先别给谁扣帽子，我们把每一箱对上。",
+      "goal": "在出库表 D2:D18 算出各箱的常规签收箱数，没有记录按 0 算；再填写 B21:B23 的合计与差额。可用任意公式和辅助列，不能改原始记录。",
+      "sheets": [
+        {
+          "id": "dispatch",
+          "name": "出库",
+          "rows": [
+            [
+              "箱号",
+              "出库箱数",
+              "原定去向",
+              "常规签收箱数"
+            ],
+            [
+              "BX001",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX002",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX003",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX004",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX005",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX006",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX007",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX008",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX009",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX010",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX011",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX012",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX013",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX014",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX015",
+              1,
+              "南街服务点",
+              null
+            ],
+            [
+              "BX016",
+              1,
+              "北街服务点",
+              null
+            ],
+            [
+              "BX017",
+              1,
+              "河湾学校",
+              null
+            ],
+            [],
+            [],
+            [
+              "出库合计",
+              null
+            ],
+            [
+              "常规签收合计",
+              null
+            ],
+            [
+              "差额",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "receipts",
+          "name": "签收",
+          "rows": [
+            [
+              "箱号",
+              "签收箱数"
+            ],
+            [
+              "BX001",
+              1
+            ],
+            [
+              "BX002",
+              1
+            ],
+            [
+              "BX003",
+              1
+            ],
+            [
+              "BX004",
+              1
+            ],
+            [
+              "BX005",
+              1
+            ],
+            [
+              "BX006",
+              1
+            ],
+            [
+              "BX007",
+              1
+            ],
+            [
+              "BX008",
+              1
+            ],
+            [
+              "BX009",
+              1
+            ],
+            [
+              "BX010",
+              1
+            ],
+            [
+              "BX011",
+              1
+            ],
+            [
+              "BX012",
+              1
+            ],
+            [
+              "BX013",
+              1
+            ],
+            [
+              "BX014",
+              1
+            ],
+            [
+              "BX015",
+              1
+            ],
+            [
+              "BX016",
+              1
+            ]
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "sheet": "dispatch",
+          "cell": "D2",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D3",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D4",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D5",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D6",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D7",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D8",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D9",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D10",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D11",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D12",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D13",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D14",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D15",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D16",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D17",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "D18",
+          "expected": 0,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "B21",
+          "expected": 17,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "B22",
+          "expected": 16,
+          "formula": true
+        },
+        {
+          "sheet": "dispatch",
+          "cell": "B23",
+          "expected": 1,
+          "formula": true
+        }
+      ],
+      "variants": [
+        {
+          "name": "箱数变化",
+          "changes": [
+            {
+              "sheet": "dispatch",
+              "cell": "B2",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B3",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B4",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B5",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B6",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B7",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B8",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B9",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B10",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B11",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B12",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B13",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B14",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B15",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B16",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B17",
+              "value": 2
+            },
+            {
+              "sheet": "dispatch",
+              "cell": "B18",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B2",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B3",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B4",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B5",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B6",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B7",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B8",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B9",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B10",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B11",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B12",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B13",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B14",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B15",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B16",
+              "value": 2
+            },
+            {
+              "sheet": "receipts",
+              "cell": "B17",
+              "value": 2
+            }
+          ],
+          "expected": {
+            "dispatch!D2": 2,
+            "dispatch!D3": 2,
+            "dispatch!D4": 2,
+            "dispatch!D5": 2,
+            "dispatch!D6": 2,
+            "dispatch!D7": 2,
+            "dispatch!D8": 2,
+            "dispatch!D9": 2,
+            "dispatch!D10": 2,
+            "dispatch!D11": 2,
+            "dispatch!D12": 2,
+            "dispatch!D13": 2,
+            "dispatch!D14": 2,
+            "dispatch!D15": 2,
+            "dispatch!D16": 2,
+            "dispatch!D17": 2,
+            "dispatch!D18": 0,
+            "dispatch!B21": 34,
+            "dispatch!B22": 32,
+            "dispatch!B23": 2
+          }
+        },
+        {
+          "name": "缺失箱号变化",
+          "changes": [
+            {
+              "sheet": "receipts",
+              "cell": "A6",
+              "value": "BX017"
+            }
+          ],
+          "expected": {
+            "dispatch!D6": 0,
+            "dispatch!D18": 1
+          }
+        }
+      ],
+      "hints": [
+        "先看两张表共有哪一列。行号相同，不代表是同一箱。",
+        "按箱号连接出库与签收，缺少签收的箱号返回 0。D2 写好后可填充到 D18。",
+        "SUMIF 可以按箱号汇总签收箱数；精确查找也可以。汇总区域需要固定。",
+        "例如：=SUMIF('签收'!$A$2:$A$17,A2,'签收'!$B$2:$B$17)。B21 求出库合计，B22 求 D 列合计，B23 算差额。"
+      ],
+      "practice": "31",
+      "solutions": [
+        {
+          "title": "条件汇总",
+          "cells": {
+            "dispatch!D2": "=SUMIF('签收'!$A$2:$A$17,A2,'签收'!$B$2:$B$17)",
+            "dispatch!D3": "=SUMIF('签收'!$A$2:$A$17,A3,'签收'!$B$2:$B$17)",
+            "dispatch!D4": "=SUMIF('签收'!$A$2:$A$17,A4,'签收'!$B$2:$B$17)",
+            "dispatch!D5": "=SUMIF('签收'!$A$2:$A$17,A5,'签收'!$B$2:$B$17)",
+            "dispatch!D6": "=SUMIF('签收'!$A$2:$A$17,A6,'签收'!$B$2:$B$17)",
+            "dispatch!D7": "=SUMIF('签收'!$A$2:$A$17,A7,'签收'!$B$2:$B$17)",
+            "dispatch!D8": "=SUMIF('签收'!$A$2:$A$17,A8,'签收'!$B$2:$B$17)",
+            "dispatch!D9": "=SUMIF('签收'!$A$2:$A$17,A9,'签收'!$B$2:$B$17)",
+            "dispatch!D10": "=SUMIF('签收'!$A$2:$A$17,A10,'签收'!$B$2:$B$17)",
+            "dispatch!D11": "=SUMIF('签收'!$A$2:$A$17,A11,'签收'!$B$2:$B$17)",
+            "dispatch!D12": "=SUMIF('签收'!$A$2:$A$17,A12,'签收'!$B$2:$B$17)",
+            "dispatch!D13": "=SUMIF('签收'!$A$2:$A$17,A13,'签收'!$B$2:$B$17)",
+            "dispatch!D14": "=SUMIF('签收'!$A$2:$A$17,A14,'签收'!$B$2:$B$17)",
+            "dispatch!D15": "=SUMIF('签收'!$A$2:$A$17,A15,'签收'!$B$2:$B$17)",
+            "dispatch!D16": "=SUMIF('签收'!$A$2:$A$17,A16,'签收'!$B$2:$B$17)",
+            "dispatch!D17": "=SUMIF('签收'!$A$2:$A$17,A17,'签收'!$B$2:$B$17)",
+            "dispatch!D18": "=SUMIF('签收'!$A$2:$A$17,A18,'签收'!$B$2:$B$17)",
+            "dispatch!B21": "=SUM(B2:B18)",
+            "dispatch!B22": "=SUM(D2:D18)",
+            "dispatch!B23": "=B21-B22"
+          },
+          "explanation": "按箱号汇总，不依赖签收行的顺序。"
+        },
+        {
+          "title": "精确查找",
+          "cells": {
+            "dispatch!D2": "=IFERROR(VLOOKUP(A2,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D3": "=IFERROR(VLOOKUP(A3,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D4": "=IFERROR(VLOOKUP(A4,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D5": "=IFERROR(VLOOKUP(A5,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D6": "=IFERROR(VLOOKUP(A6,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D7": "=IFERROR(VLOOKUP(A7,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D8": "=IFERROR(VLOOKUP(A8,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D9": "=IFERROR(VLOOKUP(A9,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D10": "=IFERROR(VLOOKUP(A10,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D11": "=IFERROR(VLOOKUP(A11,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D12": "=IFERROR(VLOOKUP(A12,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D13": "=IFERROR(VLOOKUP(A13,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D14": "=IFERROR(VLOOKUP(A14,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D15": "=IFERROR(VLOOKUP(A15,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D16": "=IFERROR(VLOOKUP(A16,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D17": "=IFERROR(VLOOKUP(A17,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!D18": "=IFERROR(VLOOKUP(A18,'签收'!$A$2:$B$17,2,FALSE),0)",
+            "dispatch!B21": "=SUM(B2:B18)",
+            "dispatch!B22": "=SUM(D2:D18)",
+            "dispatch!B23": "=B21-B22"
+          },
+          "explanation": "这份常规签收表每个箱号只有一行，因此精确查找可用；若同一箱有多条签收，要改成汇总。"
+        }
+      ]
+    },
+    {
+      "id": "case-017-transfer",
+      "title": "旧标签去了哪里",
+      "brief": "BX017 的纸标签被雨水打湿，临时换成了调拨标签。调拨本里还有一条撤回记录，不能把它当作最终去向。",
+      "goal": "调查表 B2 查新标签，C2 汇总有效箱数，D2 汇总撤回箱数，E2 查有效记录的去向。联合键由“新标签|状态”组成，可直接查找，也可以使用辅助列。不要修改原始单据。",
+      "sheets": [
+        {
+          "id": "investigation",
+          "name": "调查",
+          "rows": [
+            [
+              "旧标签",
+              "新标签",
+              "有效箱数",
+              "撤回箱数",
+              "有效去向"
+            ],
+            [
+              "BX017",
+              null,
+              null,
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "labels",
+          "name": "标签",
+          "rows": [
+            [
+              "旧标签",
+              "新标签"
+            ],
+            [
+              "BX016",
+              "T040"
+            ],
+            [
+              "BX017",
+              "T041"
+            ],
+            [
+              "BX018",
+              "T042"
+            ]
+          ]
+        },
+        {
+          "id": "transfer",
+          "name": "调拨",
+          "rows": [
+            [
+              "联合键",
+              "去向",
+              "箱数",
+              "新标签",
+              "状态"
+            ],
+            [
+              "T041|撤回",
+              "河湾学校",
+              1,
+              "T041",
+              "撤回"
+            ],
+            [
+              "T042|有效",
+              "东街服务点",
+              2,
+              "T042",
+              "有效"
+            ],
+            [
+              "T041|有效",
+              "河湾卫生站",
+              1,
+              "T041",
+              "有效"
+            ]
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "sheet": "investigation",
+          "cell": "B2",
+          "expected": "T041",
+          "formula": true
+        },
+        {
+          "sheet": "investigation",
+          "cell": "C2",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "investigation",
+          "cell": "D2",
+          "expected": 1,
+          "formula": true
+        },
+        {
+          "sheet": "investigation",
+          "cell": "E2",
+          "expected": "河湾卫生站",
+          "formula": true
+        }
+      ],
+      "variants": [
+        {
+          "name": "数量与去向变化",
+          "changes": [
+            {
+              "sheet": "transfer",
+              "cell": "C4",
+              "value": 3
+            },
+            {
+              "sheet": "transfer",
+              "cell": "C2",
+              "value": 2
+            },
+            {
+              "sheet": "transfer",
+              "cell": "B4",
+              "value": "西岸卫生站"
+            }
+          ],
+          "expected": {
+            "investigation!C2": 3,
+            "investigation!D2": 2,
+            "investigation!E2": "西岸卫生站"
+          }
+        },
+        {
+          "name": "标签变化与记录换序",
+          "changes": [
+            {
+              "sheet": "labels",
+              "cell": "B3",
+              "value": "T099"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "A2",
+              "value": "T099|有效"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "B2",
+              "value": "河湾卫生站"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "D2",
+              "value": "T099"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "E2",
+              "value": "有效"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "A4",
+              "value": "T099|撤回"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "B4",
+              "value": "河湾学校"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "D4",
+              "value": "T099"
+            },
+            {
+              "sheet": "transfer",
+              "cell": "E4",
+              "value": "撤回"
+            }
+          ],
+          "expected": {
+            "investigation!B2": "T099"
+          }
+        }
+      ],
+      "hints": [
+        "先把 BX017 对应的新标签找出来。旧标签不能直接拿去查调拨表。",
+        "同一个新标签有有效、撤回两条记录。最终去向要限定状态。",
+        "可以把 B2 与 \"|有效\" 拼成联合键，再查去向；箱数用 SUMIFS 按新标签和状态汇总。",
+        "B2 可用 =XLOOKUP(A2,标签!A2:A4,标签!B2:B4)。E2 可用 =XLOOKUP(B2&\"|有效\",调拨!A2:A4,调拨!B2:B4)。C2、D2 分别汇总有效和撤回箱数。"
+      ],
+      "practice": "33",
+      "solutions": [
+        {
+          "title": "查找与多条件汇总",
+          "cells": {
+            "investigation!B2": "=XLOOKUP(A2,标签!A2:A4,标签!B2:B4)",
+            "investigation!C2": "=SUMIFS(调拨!C2:C4,调拨!D2:D4,B2,调拨!E2:E4,\"有效\")",
+            "investigation!D2": "=SUMIFS(调拨!C2:C4,调拨!D2:D4,B2,调拨!E2:E4,\"撤回\")",
+            "investigation!E2": "=XLOOKUP(B2&\"|有效\",调拨!A2:A4,调拨!B2:B4)"
+          },
+          "explanation": "先换标签，再分状态计算。撤回记录保留用于解释过程，不累加到有效签收。"
+        },
+        {
+          "title": "精确查找与联合键汇总",
+          "cells": {
+            "investigation!B2": "=VLOOKUP(A2,标签!A2:B4,2,FALSE)",
+            "investigation!C2": "=SUMIF(调拨!A2:A4,B2&\"|有效\",调拨!C2:C4)",
+            "investigation!D2": "=SUMIF(调拨!A2:A4,B2&\"|撤回\",调拨!C2:C4)",
+            "investigation!E2": "=VLOOKUP(B2&\"|有效\",调拨!A2:C4,2,FALSE)"
+          },
+          "explanation": "联合键把标签和状态一起作为条件。有效去向只有一条，才能直接精确查找。"
+        }
+      ]
+    }
+  ],
+  "clues": [
+    "仓库便条：17 箱已经离站。常规签收汇总不包含临时调拨单。请先核对，暂不补发。",
+    "临时调拨单：BX017 更换为 T041。原送学校的登记已撤回，最终签收以有效记录为准。"
+  ],
+  "evidence": [
+    "缺口定位：BX017 未出现在常规签收，差额为 1 箱。",
+    "去向核对：T041 有效签收 1 箱到河湾卫生站，学校记录已撤回。"
+  ],
+  "conclusion": {
+    "destination": [
+      "河湾卫生站",
+      "河湾学校",
+      "仍在仓库"
+    ],
+    "reason": [
+      "常规汇总漏了临时调拨记录",
+      "货物途中丢失",
+      "撤回记录也应累加"
+    ],
+    "action": [
+      "补登记调拨并关联新旧标签，保留撤回记录",
+      "再补发一箱",
+      "删除所有撤回记录"
+    ],
+    "correct": {
+      "destination": "河湾卫生站",
+      "reason": "常规汇总漏了临时调拨记录",
+      "action": "补登记调拨并关联新旧标签，保留撤回记录"
+    }
+  }
+}
