@@ -13,6 +13,7 @@ import {
 } from "../cases/model";
 import { createCaseStorage } from "../cases/storage";
 import type { WorkbookSnapshot } from "../types";
+import { saveStatus } from "../workshop/save-status";
 import CaseStagePanel from "../components/CaseStagePanel.vue";
 import "../cases/case.css";
 const stagePanel = ref<InstanceType<typeof CaseStagePanel>>();
@@ -56,7 +57,7 @@ async function save() {
       error.value = "";
     }
   } catch (e) {
-    if (alive) {
+    if (alive && seq === saveSequence) {
       saved.value = "保存未成功";
       error.value =
         e instanceof Error ? e.message : "案件未能保存，请导出备份。";
@@ -75,7 +76,11 @@ function passed(i: number, b: WorkbookSnapshot) {
   void save();
 }
 async function select(i: number) {
-  if (stagePanel.value && !(await stagePanel.value.commit())) return;
+  if (
+    stagePanel.value &&
+    (await stagePanel.value.commit()).status !== "success"
+  )
+    return;
   if (i <= progress.value.unlocked) {
     progress.value.active = i;
     void save();
@@ -87,12 +92,20 @@ function hint() {
   void save();
 }
 async function submit() {
-  if (stagePanel.value && !(await stagePanel.value.commit())) return;
+  if (
+    stagePanel.value &&
+    (await stagePanel.value.commit()).status !== "success"
+  )
+    return;
   feedback.value = conclude(definition, progress.value);
   void save();
 }
 async function exportCase() {
-  if (stagePanel.value && !(await stagePanel.value.commit())) return;
+  if (
+    stagePanel.value &&
+    (await stagePanel.value.commit()).status !== "success"
+  )
+    return;
   const blob = new Blob(
     [
       JSON.stringify(
@@ -122,7 +135,13 @@ async function exportCase() {
         <h1>{{ definition.title }}</h1>
       </div>
       <div class="case-save">
-        <span role="status">{{ saved || "本机保存调查进度" }}</span
+        <span role="status">{{
+          saveStatus({
+            saved: saved || "本机保存调查进度",
+            editing: !!stagePanel?.editing,
+            error: saved === "保存未成功",
+          })
+        }}</span
         ><button class="button subtle" @click="exportCase">导出案件备份</button>
       </div>
     </header>

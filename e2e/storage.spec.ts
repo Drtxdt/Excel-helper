@@ -73,7 +73,9 @@ test("另一标签页导入后保留本页作答，允许导出，再明确重�
   await expect(other.getByRole("status")).toContainText("备份已恢复");
   await expect(page.getByRole("alert")).toContainText("已保存的学习记录有更新");
   await writeFormula(page, "=B2*C2+1");
-  await expect(page.locator(".workshop-heading")).toContainText("保存未成功");
+  await expect(page.locator(".workshop-heading")).toContainText(
+    "存档有更新，当前作答尚未保存",
+  );
   await expect(formulaInput(page).value).toHaveAttribute(
     "data-value",
     "=B2*C2+1",

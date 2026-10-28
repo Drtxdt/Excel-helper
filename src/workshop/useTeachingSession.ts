@@ -6,6 +6,7 @@ import { passedRecord } from "../learning";
 import { exerciseLesson } from "../exercise";
 import { makeWorkbook, put } from "../workbook";
 import { TeachingSession, sessionState } from "./session";
+import { saveStatus } from "./save-status";
 import { gradeInWorker, disposeGradeWorker } from "./grade-client";
 import type { LessonDefinition, WorkbookSnapshot } from "../types";
 export function useTeachingSession(lesson: LessonDefinition) {
@@ -40,6 +41,7 @@ export function useTeachingSession(lesson: LessonDefinition) {
     grade: gradeInWorker,
     changed() {
       traceData.value = undefined;
+      saveSerial++;
       saved.value = "正在保存…";
       clearTimeout(timer);
       timer = setTimeout(() => void persist(), 600);
@@ -65,6 +67,7 @@ export function useTeachingSession(lesson: LessonDefinition) {
     const draft = session.snapshot();
     if (!draft) return;
     const serial = ++saveSerial;
+    saved.value = "正在保存…";
     await save({
       lessonId: lesson.id,
       lessonVersion: lesson.version,
@@ -160,10 +163,17 @@ export function useTeachingSession(lesson: LessonDefinition) {
   }
   async function leave() {
     if (!ui.ready) return true;
-    if (!(await session.commit())) return false;
-    await adapter?.wait();
+    if ((await session.commit()).status !== "success") return false;
+    const revision = ui.revision,
+      editorRevision = ui.editor?.revision;
     await persist();
-    return true;
+    return (
+      !disposed &&
+      ui.ready &&
+      !ui.editor?.active &&
+      ui.revision === revision &&
+      ui.editor?.revision === editorRevision
+    );
   }
   onBeforeRouteLeave(leave);
   onBeforeRouteUpdate(leave);
@@ -178,7 +188,14 @@ export function useTeachingSession(lesson: LessonDefinition) {
   });
   return {
     ui,
-    saved,
+    saved: computed(() =>
+      saveStatus({
+        saved: saved.value,
+        editing: !!ui.editor?.active,
+        error: !!state.storageError,
+        conflict: state.storageConflict,
+      }),
+    ),
     variant,
     hintCount,
     usedHelp,
