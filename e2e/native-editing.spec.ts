@@ -239,3 +239,44 @@ test("条件汇总课直接从网格输入中文条件", async ({ page }) => {
   });
   await checkPassed(page);
 });
+
+test("错误样式文字与真正错误在选格和判题中保持一致", async ({ page }) => {
+  await openLesson(page, "02");
+  for (const [formula, advice] of [
+    ["=1/0", "除数是零或空白"],
+    ['="#DIV/0!"', ""],
+    ["=NA()", "没有找到匹配项"],
+    ['=IFERROR(1/0,"#N/A")', ""],
+  ]) {
+    await formulaInput(page).fill(formula);
+    await page.getByRole("button", { name: "写入", exact: true }).click();
+    await page.getByRole("button", { name: "检查作答", exact: true }).click();
+    await expect(page.locator(".diagnostic").first()).toBeVisible();
+    if (advice) {
+      await expect(page.locator(".input-advice")).toContainText(advice);
+      await expect(page.locator(".diagnostic")).toHaveCount(1);
+      await expect(page.locator(".diagnostic")).toContainText(advice);
+    } else {
+      await expect(page.locator(".input-advice")).toHaveCount(0);
+      await expect(page.locator(".diagnostic").first()).toContainText(
+        "这份数据应得到",
+      );
+    }
+    await selectCell(page, 1);
+    await selectCell(page, 3);
+    if (advice)
+      await expect(page.locator(".input-advice")).toContainText(advice);
+    else await expect(page.locator(".input-advice")).toHaveCount(0);
+  }
+  await waitSaved(page);
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "检查作答", exact: true }),
+  ).toBeEnabled();
+  await selectCell(page, 3);
+  await expect(formulaInput(page).value).toHaveAttribute(
+    "data-value",
+    '=IFERROR(1/0,"#N/A")',
+  );
+  await expect(page.locator(".input-advice")).toHaveCount(0);
+});

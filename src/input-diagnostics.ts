@@ -1,3 +1,7 @@
+import { CellValueType } from "@univerjs/core";
+import { ERROR_TYPE_SET, type ErrorType } from "@univerjs/engine-formula";
+import type { CellData } from "./types";
+
 /** Teaching diagnostics only. Formula parsing and calculation remain in Univer. */
 export interface InputIssue {
   code: "missing-equals" | "syntax";
@@ -58,16 +62,32 @@ export function inputIssue(text: string): InputIssue | undefined {
       message: "括号还没有配对，写完参数后记得补上右括号。",
     };
 }
-export function calculationAdvice(value: unknown): string | undefined {
+/** Univer 1.2 marks error-looking string results as FORCE_STRING, not errors.
+ * Pass the calculated cell: an input snapshot may still contain stale metadata.
+ */
+export function calculationAdvice(
+  cell: Pick<CellData, "v" | "t"> | null | undefined,
+): string | undefined {
+  if (
+    !cell ||
+    cell.t === CellValueType.FORCE_STRING ||
+    typeof cell.v !== "string" ||
+    !ERROR_TYPE_SET.has(cell.v as ErrorType)
+  )
+    return;
+  const value = cell.v;
   return (
-    {
-      "#NAME?": "有名称未被识别。检查函数拼写，以及文字是否放在英文双引号里。",
-      "#VALUE!": "参与计算的值类型不合适。检查引用里是否混入文字或文本数字。",
-      "#REF!": "有引用已经无效。检查工作表名称、单元格地址及被删除的区域。",
-      "#DIV/0!": "除数是零或空白。检查分母引用的单元格。",
-      "#N/A": "没有找到匹配项。检查查找值、匹配范围和未匹配时的处理。",
-      "#NUM!": "数值超出了这次计算允许的范围。检查参数和计算范围。",
-      "#SPILL!": "结果需要更多单元格。检查结果区域是否被其他内容占用。",
-    } as Record<string, string>
-  )[String(value)];
+    (
+      {
+        "#NAME?":
+          "有名称未被识别。检查函数拼写，以及文字是否放在英文双引号里。",
+        "#VALUE!": "参与计算的值类型不合适。检查引用里是否混入文字或文本数字。",
+        "#REF!": "有引用已经无效。检查工作表名称、单元格地址及被删除的区域。",
+        "#DIV/0!": "除数是零或空白。检查分母引用的单元格。",
+        "#N/A": "没有找到匹配项。检查查找值、匹配范围和未匹配时的处理。",
+        "#NUM!": "数值超出了这次计算允许的范围。检查参数和计算范围。",
+        "#SPILL!": "结果需要更多单元格。检查结果区域是否被其他内容占用。",
+      } as Record<string, string>
+    )[value] ?? "计算返回了错误。检查引用和函数参数，再重新计算。"
+  );
 }
