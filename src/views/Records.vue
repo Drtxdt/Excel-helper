@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from "vue";
+import {
+  nextTick,
+  computed,
+  ref,
+  shallowRef,
+  onMounted,
+  onBeforeUnmount,
+} from "vue";
 import { RouterLink } from "vue-router";
 import { Download, Upload, Check } from "lucide-vue-next";
 import { state, importRecords } from "../state";
@@ -9,11 +16,17 @@ import {
   previousBackup,
   upgradeBackup,
   readCases,
+  parseImport,
+  restore,
 } from "../storage";
 import { lessons } from "../content";
 import { cases } from "../cases/catalog";
 import type { CaseProgress } from "../cases/model";
 import { readBackupFile, BackupImportError } from "../backup-limits";
+import FocusDialog from "../components/workshop/FocusDialog.vue";
+import "../workshop/workshop.css";
+const pendingCase = shallowRef<{ text: string; title: string; id: string }>();
+const importButton = ref<HTMLButtonElement>();
 const importing = ref<"" | "reading" | "writing">("");
 let reading: AbortController | undefined;
 onBeforeUnmount(() => reading?.abort());
@@ -74,6 +87,16 @@ async function importFile(e: Event) {
     const text = await readBackupFile(f, controller.signal);
     if (controller.signal.aborted)
       throw new BackupImportError("已取消读取，原有记录保留。");
+    const parsed = parseImport(text);
+    if (parsed.format === "supply-station-case") {
+      pendingCase.value = {
+        text,
+        id: parsed.progress.caseId,
+        title: cases.find((c) => c.id === parsed.progress.caseId)!.title,
+      };
+      message.value = "请选择是否恢复这份案件备份。";
+      return;
+    }
     importing.value = "writing";
     message.value = "正在校验并恢复备份，请稍等。";
     await importRecords(text);
@@ -95,6 +118,38 @@ async function importFile(e: Event) {
     (e.target as HTMLInputElement).value = "";
   }
 }
+function cancelCaseImport() {
+  if (importing.value === "writing") return;
+  pendingCase.value = undefined;
+  message.value = "已取消案件恢复，原有记录保留。";
+  void nextTick(() => importButton.value?.focus());
+}
+async function confirmCaseImport() {
+  if (!pendingCase.value || importing.value) return;
+  importing.value = "writing";
+  try {
+    // Keep course state, including any in-memory unsaved course draft, untouched.
+    await restore(pendingCase.value.text);
+    pendingCase.value = undefined;
+    message.value =
+      "案件备份已恢复。课程与其他案件保留，导入前副本可在下方下载。";
+    try {
+      await refreshCases();
+    } catch {
+      message.value += " 案件列表暂时无法读取，请刷新查看。";
+    }
+  } catch (error) {
+    message.value =
+      error instanceof Error
+        ? `没有导入：${error.message} 原有记录保留。`
+        : "没有导入：存储暂时不可用，原有记录保留。";
+    pendingCase.value = undefined;
+  } finally {
+    importing.value = "";
+    await nextTick();
+    importButton.value?.focus();
+  }
+}
 async function oldBackup() {
   try {
     const data = await previousBackup();
@@ -107,6 +162,32 @@ async function oldBackup() {
 </script>
 <template>
   <main class="page-width records-page">
+    <FocusDialog
+      v-if="pendingCase"
+      title="恢复案件备份"
+      :return-focus="importButton"
+      @close="cancelCaseImport"
+    >
+      <p>将恢复《{{ pendingCase.title }}》（{{ pendingCase.id }}）。</p>
+      <p>
+        只替换这个案件的草稿、步骤、线索、提示和交接记录。课程与其他案件保留；导入前的完整记录会另存一份。
+      </p>
+      <p v-if="importing === 'writing'" role="status">正在恢复，请稍等。</p>
+      <button
+        class="button subtle"
+        :disabled="!!importing"
+        @click="cancelCaseImport"
+      >
+        取消恢复
+      </button>
+      <button
+        class="button primary"
+        :disabled="!!importing"
+        @click="confirmCaseImport"
+      >
+        确认恢复案件
+      </button>
+    </FocusDialog>
     <p class="eyebrow">每一份做过的表，都留个记录</p>
     <h1>学习记录与备份</h1>
     <div class="records-summary">
@@ -126,7 +207,7 @@ async function oldBackup() {
       <div>
         <h2>进度存在这台电脑里</h2>
         <p>
-          清理浏览器数据或更换电脑前，请导出备份。新版备份包含课程和案件；导入会替换这两类记录，并保留导入前副本。旧版课程备份只替换课程。
+          清理浏览器数据或更换电脑前，请导出备份。新版备份包含课程和案件；导入会替换这两类记录，并保留导入前副本。旧版课程备份只替换课程。单独的案件备份只恢复对应案件，确认后才写入。
         </p>
       </div>
       <div class="backup-buttons">
@@ -134,7 +215,8 @@ async function oldBackup() {
           <Download :size="17" />导出备份</button
         ><button
           class="button subtle"
-          :disabled="!!importing"
+          ref="importButton"
+          :disabled="!!importing || !!pendingCase"
           @click="file?.click()"
         >
           <Upload :size="17" />导入备份</button

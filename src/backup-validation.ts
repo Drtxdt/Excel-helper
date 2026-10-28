@@ -149,9 +149,15 @@ export function validateBackupWorkbooks(input: unknown) {
       );
     }
   }
-  if (data.version === 2 && Array.isArray(data.cases)) {
-    if (data.cases.length > 100) fail("备份", "案件记录超过 100 条。");
-    for (const raw of data.cases) {
+  const investigations =
+    data.format === "supply-station-case"
+      ? [data.progress]
+      : data.version === 2 && Array.isArray(data.cases)
+        ? data.cases
+        : [];
+  if (investigations.length) {
+    if (investigations.length > 100) fail("备份", "案件记录超过 100 条。");
+    for (const raw of investigations) {
       const progress = object(raw, "案件记录");
       const definition = cases.find((c) => c.id === progress.caseId);
       if (!definition) fail("案件记录", "未知案件。");

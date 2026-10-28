@@ -56,7 +56,7 @@ export function backup(
     cases: caseRecords,
   };
 }
-export function parseBackup(text: string) {
+function readBackupJSON(text: string): unknown {
   if (text.length > BACKUP_LIMITS.characters)
     throw new BackupImportError(
       "备份超过 20,000,000 字符，请保留原文件并拆分备份。",
@@ -69,6 +69,9 @@ export function parseBackup(text: string) {
       "文件不是完整有效的 JSON，请保留原文件并检查内容。",
     );
   }
+  return raw;
+}
+function parseLearningBackup(raw: unknown) {
   validateBackupWorkbooks(raw);
   const version = (raw as { version?: unknown }).version;
   if (version !== 1 && version !== 2)
@@ -95,6 +98,27 @@ export function parseBackup(text: string) {
   )
     throw new BackupImportError("备份包含重复案件。");
   return data;
+}
+
+export function parseBackup(text: string) {
+  return parseLearningBackup(readBackupJSON(text));
+}
+const singleCaseSchema = z.object({
+  format: z.literal("supply-station-case"),
+  version: z.literal(1),
+  progress: caseProgressSchema,
+});
+export function parseImport(text: string) {
+  const raw = readBackupJSON(text);
+  if ((raw as { format?: unknown } | null)?.format !== "supply-station-case")
+    return parseLearningBackup(raw);
+  validateBackupWorkbooks(raw);
+  const parsed = singleCaseSchema.safeParse(raw);
+  if (!parsed.success)
+    throw new BackupImportError(
+      "案件备份内容或版本无效，请保留原文件并检查案件记录。",
+    );
+  return parsed.data;
 }
 
 interface Stamp {
@@ -413,7 +437,8 @@ export function createStorage(options: StorageOptions = {}) {
       });
     },
     async restore(text: string) {
-      const data = parseBackup(text); // Invalid input never enters the write queue.
+      const data = parseImport(text); // Invalid input never enters the write queue.
+      const single = data.format === "supply-station-case";
       const generation = known?.generation;
       const importAtCall = importVersion;
       return enqueue(async () => {
@@ -443,8 +468,15 @@ export function createStorage(options: StorageOptions = {}) {
             backup(previous, await caseRecords(settings)),
             "before-import",
           );
-          // v1 is course-only: preserve cases. v2 is a complete replacement.
-          if (data.version === 2) {
+          // Single-case imports never clear courses or unrelated case keys.
+          if (single) {
+            const key = "case:" + data.progress.caseId;
+            const old = await settings.get(key);
+            await settings.put(
+              { revision: (old?.revision ?? 0) + 1, progress: data.progress },
+              key,
+            );
+          } else if (data.version === 2) {
             for (const key of await settings.getAllKeys())
               if (typeof key === "string" && key.startsWith("case:"))
                 await settings.delete(key);
@@ -454,9 +486,14 @@ export function createStorage(options: StorageOptions = {}) {
                 "case:" + progress.caseId,
               );
           }
-          await store.clear();
-          for (const record of data.records) await store.put(record);
-          const next = { generation: current.generation + 1, stamps: {} };
+          if (!single) {
+            await store.clear();
+            for (const record of data.records) await store.put(record);
+          }
+          const next = {
+            generation: current.generation + 1,
+            stamps: single ? current.stamps : {},
+          };
           await settings.put(next, "revision-state");
           await tx.done;
           known = next;
@@ -467,7 +504,7 @@ export function createStorage(options: StorageOptions = {}) {
             journal?.removeItem(legacyKey);
           } catch {}
           options.onCommit?.();
-          return data.records;
+          return single ? previous : data.records;
         } catch (error) {
           try {
             tx.abort();
