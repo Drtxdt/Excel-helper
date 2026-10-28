@@ -11,11 +11,14 @@ import {
   validEvidence,
   conclude,
 } from "../cases/model";
+import { caseExportDecision } from "../cases/export-policy";
 import { createCaseStorage } from "../cases/storage";
 import type { WorkbookSnapshot } from "../types";
 import { saveStatus } from "../workshop/save-status";
 import CaseStagePanel from "../components/CaseStagePanel.vue";
 import "../cases/case.css";
+const exportMessage = ref(""),
+  exporting = ref(false);
 const stagePanel = ref<InstanceType<typeof CaseStagePanel>>();
 const progress = ref(freshCase(definition)),
   loaded = ref(false),
@@ -101,27 +104,43 @@ async function submit() {
   void save();
 }
 async function exportCase() {
-  if (
-    stagePanel.value &&
-    (await stagePanel.value.commit()).status !== "success"
-  )
-    return;
-  const blob = new Blob(
-    [
-      JSON.stringify(
-        { format: "supply-station-case", version: 1, progress: progress.value },
-        null,
-        2,
-      ),
-    ],
-    { type: "application/json" },
-  );
-  const url = URL.createObjectURL(blob),
-    a = document.createElement("a");
-  a.href = url;
-  a.download = `表格补给站-${definition.id}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  if (!loaded.value || exporting.value) return;
+  exporting.value = true;
+  exportMessage.value = "";
+  const panel = stagePanel.value;
+  try {
+    const outcome = panel
+      ? await panel.commit()
+      : { status: "unavailable" as const, message: "表格暂时不可用。" };
+    if (!alive || panel !== stagePanel.value) return;
+    const decision = caseExportDecision(outcome, !!panel?.editing);
+    exportMessage.value = decision.message;
+    if (!decision.allowed) return;
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          {
+            format: "supply-station-case",
+            version: 1,
+            progress: progress.value,
+          },
+          null,
+          2,
+        ),
+      ],
+      { type: "application/json" },
+    );
+    const url = URL.createObjectURL(blob),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = `表格补给站-${definition.id}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    exportMessage.value = `尚未导出：${e instanceof Error ? e.message : "暂时无法读取表格"}。当前作答保留，请重试。`;
+  } finally {
+    exporting.value = false;
+  }
 }
 </script>
 <template>
@@ -142,9 +161,18 @@ async function exportCase() {
             error: saved === "保存未成功",
           })
         }}</span
-        ><button class="button subtle" @click="exportCase">导出案件备份</button>
+        ><button
+          class="button subtle"
+          :disabled="!loaded || exporting"
+          @click="exportCase"
+        >
+          导出案件备份
+        </button>
       </div>
     </header>
+    <p v-if="exportMessage" class="case-message" role="status">
+      {{ exportMessage }}
+    </p>
     <p v-if="error" class="case-message" role="alert">{{ error }}</p>
     <p v-if="!loaded" role="status">正在取出调查记录…</p>
     <div v-else class="case-layout">
