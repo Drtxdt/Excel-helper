@@ -49,10 +49,7 @@ export async function grade(
           typeof original.v === "string"
             ? inputIssue(original.v)
             : undefined;
-        const advice =
-          original.f && !equal(actual, expected)
-            ? calculationAdvice(actual)
-            : undefined;
+        const advice = original.f ? calculationAdvice(raw) : undefined;
         if (issue) {
           if (diagnosed.has(key)) continue;
           diagnosed.add(key);

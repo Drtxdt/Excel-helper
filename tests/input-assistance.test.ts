@@ -26,4 +26,4 @@ test.each(["=SUM(A1:A3", '=IF(A1=1,"缺引号)', "=SUM（A1:A3）", "=SUM(A1:A3)
   },
 );
 test("未知错误不猜原因", () =>
-  expect(calculationAdvice("#UNKNOWN!")).toBeUndefined());
+  expect(calculationAdvice({ v: "#UNKNOWN!", t: 1 })).toBeUndefined());

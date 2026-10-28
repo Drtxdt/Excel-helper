@@ -214,7 +214,7 @@ export class SpreadsheetAdapter {
           e.worksheet.getSheetId(),
           r.getA1Notation(),
           r.getFormula() || String(r.getValue() ?? ""),
-          r.getFormula() ? calculationAdvice(r.getValue()) : undefined,
+          r.getFormula() ? calculationAdvice(r.getCellData()) : undefined,
         );
       },
     );
@@ -227,7 +227,7 @@ export class SpreadsheetAdapter {
         s.getSheetId(),
         r.getA1Notation(),
         r.getFormula() || String(r.getValue() ?? ""),
-        r.getFormula() ? calculationAdvice(r.getValue()) : undefined,
+        r.getFormula() ? calculationAdvice(r.getCellData()) : undefined,
       );
   }
   async fillDown(sheet: string, range: string) {
