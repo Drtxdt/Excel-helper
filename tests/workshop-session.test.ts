@@ -479,9 +479,11 @@ test("离开前提交等待期间有新输入时，不允许导航使用旧快�
   x.adapters[0].wait.mockReturnValueOnce(wait.promise);
   const committing = x.session.commit();
   await vi.waitFor(() => expect(x.adapters[0].wait).toHaveBeenCalledTimes(2));
+  expect(x.state.committing).toBe(true);
   x.editing();
   wait.resolve();
   expect((await committing).status).toBe("cancelled");
+  expect(x.state.committing).toBe(false);
   x.session.dispose();
 });
 

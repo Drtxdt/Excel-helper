@@ -111,6 +111,7 @@ export class TeachingSession {
   private init?: AbortController;
   private checkRun?: CheckAttempt;
   private inputRevision = 0;
+  private flushing = new Set<symbol>();
   private pendingCommit?: {
     adapter: SessionAdapter;
     promise: Promise<CommitResult>;
@@ -149,6 +150,7 @@ export class TeachingSession {
     this.state.ready = false;
     this.inputRevision++;
     this.pendingCommit = undefined;
+    this.flushing.clear();
     this.state.committing = false;
     this.state.editor = undefined;
     this.state.phase = "preparing";
@@ -345,7 +347,7 @@ export class TeachingSession {
       } finally {
         if (this.pendingCommit === pending) {
           this.pendingCommit = undefined;
-          this.state.committing = false;
+          this.state.committing = this.flushing.size > 0;
         }
       }
     })();
@@ -359,6 +361,9 @@ export class TeachingSession {
     const a = this.adapter,
       inputRevision = this.inputRevision;
     const signal = this.init!.signal;
+    const flush = Symbol();
+    this.flushing.add(flush);
+    this.state.committing = true;
     try {
       if (
         this.actions.size &&
@@ -412,6 +417,10 @@ export class TeachingSession {
         e instanceof Error ? e.message : "输入尚未写入，请继续修改。";
       this.state.error = message;
       return { status: "failed", message };
+    } finally {
+      this.flushing.delete(flush);
+      if (!this.disposed && a === this.adapter)
+        this.state.committing = !!this.pendingCommit || this.flushing.size > 0;
     }
   }
   resolveInput(action: "equals" | "text" | "edit", revision: number) {
