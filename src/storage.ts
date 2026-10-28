@@ -1,3 +1,5 @@
+import { BACKUP_LIMITS, BackupImportError } from "./backup-limits";
+import { validateBackupWorkbooks } from "./backup-validation";
 import { openDB, type IDBPDatabase } from "idb";
 import { z } from "zod";
 import { normalizeRecord } from "./learning";
@@ -37,13 +39,11 @@ const caseProgressSchema = z.unknown().transform((input, ctx) => {
     return z.NEVER;
   }
 });
-export const backupSchema = z.union([
-  legacyBackupSchema,
-  legacyBackupSchema.extend({
-    version: z.literal(2),
-    cases: z.array(caseProgressSchema).max(100),
-  }),
-]);
+const fullBackupSchema = legacyBackupSchema.extend({
+  version: z.literal(2),
+  cases: z.array(caseProgressSchema).max(100),
+});
+export const backupSchema = z.union([legacyBackupSchema, fullBackupSchema]);
 export function backup(
   records: LearningRecord[],
   caseRecords: CaseProgress[] = [],
@@ -57,19 +57,43 @@ export function backup(
   };
 }
 export function parseBackup(text: string) {
-  if (text.length > 20_000_000) throw Error("备份超过 20 MB，请检查文件。");
-  const data = backupSchema.parse(JSON.parse(text));
+  if (text.length > BACKUP_LIMITS.characters)
+    throw new BackupImportError(
+      "备份超过 20,000,000 字符，请保留原文件并拆分备份。",
+    );
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new BackupImportError(
+      "文件不是完整有效的 JSON，请保留原文件并检查内容。",
+    );
+  }
+  validateBackupWorkbooks(raw);
+  const version = (raw as { version?: unknown }).version;
+  if (version !== 1 && version !== 2)
+    throw new BackupImportError("不支持这份备份的版本，请保留原文件。");
+  const parsed = (
+    version === 1 ? legacyBackupSchema : fullBackupSchema
+  ).safeParse(raw);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    throw new BackupImportError(
+      `备份结构无效（${issue.path.join(".") || "格式或版本"}），请检查记录字段与版本。`,
+    );
+  }
+  const data = parsed.data;
   if (new Set(data.records.map((r) => r.lessonId)).size !== data.records.length)
-    throw Error("备份包含重复关卡。");
+    throw new BackupImportError("备份包含重复关卡。");
   if (
     data.records.some((r) => Number(r.lessonId) < 1 || Number(r.lessonId) > 40)
   )
-    throw Error("未知关卡。");
+    throw new BackupImportError("未知关卡。");
   if (
     data.version === 2 &&
     new Set(data.cases.map((c) => c.caseId)).size !== data.cases.length
   )
-    throw Error("备份包含重复案件。");
+    throw new BackupImportError("备份包含重复案件。");
   return data;
 }
 

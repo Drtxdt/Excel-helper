@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import { RouterLink } from "vue-router";
 import { Download, Upload, Check } from "lucide-vue-next";
 import { state, importRecords } from "../state";
@@ -13,6 +13,10 @@ import {
 import { lessons } from "../content";
 import { cases } from "../cases/catalog";
 import type { CaseProgress } from "../cases/model";
+import { readBackupFile, BackupImportError } from "../backup-limits";
+const importing = ref<"" | "reading" | "writing">("");
+let reading: AbortController | undefined;
+onBeforeUnmount(() => reading?.abort());
 const investigations = ref<CaseProgress[]>([]);
 async function refreshCases() {
   investigations.value = await readCases();
@@ -61,9 +65,18 @@ function download(data: unknown, name: string) {
 }
 async function importFile(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0];
-  if (!f) return;
+  if (!f || importing.value) return;
+  const controller = new AbortController();
+  reading = controller;
+  importing.value = "reading";
+  message.value = "正在读取备份，可以取消。";
   try {
-    await importRecords(await f.text());
+    const text = await readBackupFile(f, controller.signal);
+    if (controller.signal.aborted)
+      throw new BackupImportError("已取消读取，原有记录保留。");
+    importing.value = "writing";
+    message.value = "正在校验并恢复备份，请稍等。";
+    await importRecords(text);
     message.value = "备份已恢复。导入前的记录已另存，可用下方按钮下载。";
     try {
       await refreshCases();
@@ -71,11 +84,16 @@ async function importFile(e: Event) {
       message.value =
         "备份已恢复，但案件列表暂时无法读取。请刷新后查看；导入前副本已保留。";
     }
-  } catch {
+  } catch (error) {
     message.value =
-      "没有导入：文件内容、存储空间或记录版本需要检查，原有记录保留。";
+      error instanceof BackupImportError
+        ? `没有导入：${error.message} 原有记录保留。`
+        : "没有导入：存储空间或记录版本需要检查，原有记录保留。";
+  } finally {
+    importing.value = "";
+    reading = undefined;
+    (e.target as HTMLInputElement).value = "";
   }
-  (e.target as HTMLInputElement).value = "";
 }
 async function oldBackup() {
   try {
@@ -114,7 +132,11 @@ async function oldBackup() {
       <div class="backup-buttons">
         <button class="button primary" @click="exportAll">
           <Download :size="17" />导出备份</button
-        ><button class="button subtle" @click="file?.click()">
+        ><button
+          class="button subtle"
+          :disabled="!!importing"
+          @click="file?.click()"
+        >
           <Upload :size="17" />导入备份</button
         ><input
           ref="file"
@@ -122,7 +144,14 @@ async function oldBackup() {
           accept="application/json,.json"
           hidden
           @change="importFile"
-        /><button class="text-button" @click="oldBackup">下载导入前备份</button>
+        /><button
+          v-if="importing === 'reading'"
+          class="text-button"
+          @click="reading?.abort()"
+        >
+          取消读取
+        </button>
+        <button class="text-button" @click="oldBackup">下载导入前备份</button>
         <button class="text-button" @click="beforeUpgrade">
           下载升级前备份
         </button>
