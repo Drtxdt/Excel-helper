@@ -55,7 +55,8 @@ export function useCaseSession(
   function traceSelection() {
     trace.value = adapter?.trace(ui.sheet, ui.cell);
   }
-  const leave = async () => !ui.ready || (await session.commit());
+  const leave = async () =>
+    !ui.ready || (await session.commit()).status === "success";
   onBeforeRouteLeave(leave);
   onBeforeRouteUpdate(leave);
   onBeforeUnmount(() => {

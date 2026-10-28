@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowRef } from "vue";
+import { computed, ref, shallowRef } from "vue";
 import { RouterLink } from "vue-router";
 import type { CaseStage } from "../cases/definition";
 import type { WorkbookSnapshot } from "../types";
@@ -39,7 +39,10 @@ function openTrace(e: MouseEvent) {
   traceSelection();
   showTrace.value = true;
 }
-defineExpose({ commit: () => session.commit() });
+defineExpose({
+  commit: () => session.commit(),
+  editing: computed(() => !!ui.editor?.active),
+});
 </script>
 <template>
   <section class="case-stage" :aria-label="stage.title">

@@ -4,6 +4,7 @@ import {
   sessionState,
   type SessionAdapter,
 } from "../src/workshop/session";
+import type { EditorState } from "../src/input-diagnostics";
 import { lessons } from "../src/content";
 import { makeWorkbook } from "../src/workbook";
 import type { GradeResult } from "../src/types";
@@ -24,22 +25,24 @@ function setup() {
     wait: ReturnType<typeof vi.fn>;
     dispose: ReturnType<typeof vi.fn>;
   })[] = [];
-  const create = vi.fn((_book, onChange, onSelect) => {
-    const a = {
-      wait: vi.fn().mockResolvedValue(undefined),
-      snapshot: () => makeWorkbook(lessons[1]),
-      dispose: vi.fn(),
-      focus: (s: string, c: string) => onSelect(s, c, ""),
-      write: () => onChange(),
-      fillDown: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      operate: vi.fn(),
-      operationState: vi.fn(),
-    };
-    adapters.push(a);
-    return a;
-  });
+  const create = vi.fn(
+    (_book, onChange, onSelect, _editing?: (editor: EditorState) => void) => {
+      const a = {
+        wait: vi.fn().mockResolvedValue(undefined),
+        snapshot: () => makeWorkbook(lessons[1]),
+        dispose: vi.fn(),
+        focus: (s: string, c: string) => onSelect(s, c, ""),
+        write: () => onChange(),
+        fillDown: vi.fn(),
+        undo: vi.fn(),
+        redo: vi.fn(),
+        operate: vi.fn(),
+        operationState: vi.fn(),
+      };
+      adapters.push(a);
+      return a;
+    },
+  );
   const session = new TeachingSession(state, {
     create,
     grade,
@@ -66,6 +69,15 @@ function setup() {
     create,
     open,
     result,
+    editing(active = true, text = "=0", index = adapters.length - 1) {
+      create.mock.calls[index][3]!({
+        active,
+        text,
+        revision: 1,
+        sheet: "main",
+        cell: "D2",
+      });
+    },
   };
 }
 afterEach(() => vi.useRealTimers());
@@ -345,5 +357,163 @@ test("初始化失败后仍保留原始快照，可以重新创建引擎", async
   expect(x.state.ready).toBe(true);
   expect(x.create.mock.calls[1][0]).toBe(book);
   expect(x.adapters[0].dispose).toHaveBeenCalledOnce();
+  x.session.dispose();
+});
+
+test("提交已完成但重算尚未完成时，新输入必须取消旧快照检查", async () => {
+  const x = setup();
+  await x.open();
+  x.editing(true, "=B2*C2");
+  x.adapters[0].commit = vi.fn(async () => {
+    x.session.changed();
+    x.editing(false, "=B2*C2");
+    return true;
+  });
+  const wait = deferred<void>();
+  x.adapters[0].wait.mockReturnValueOnce(wait.promise);
+  x.grade.mockImplementation(async (_l, _b, revision) => ({
+    ...x.result(),
+    revision,
+  }));
+  const checking = x.session.check(lessons[1]);
+  await vi.waitFor(() => expect(x.adapters[0].wait).toHaveBeenCalledTimes(2));
+  x.editing(true, "=0");
+  await checking;
+  wait.resolve();
+  expect(x.state.editor?.active).toBe(true);
+  expect(x.state.phase).toBe("editing");
+  expect(x.grade).not.toHaveBeenCalled();
+  expect(x.passed).not.toHaveBeenCalled();
+  x.session.dispose();
+});
+
+test("正常提交的变更和结束事件不取消自己的检查，且只等一次重算", async () => {
+  const x = setup();
+  await x.open();
+  x.editing(true, "=B2*C2");
+  x.adapters[0].commit = vi.fn(async () => {
+    x.session.changed();
+    x.editing(false, "=B2*C2");
+    return true;
+  });
+  x.grade.mockImplementation(async (_l, _b, revision) => ({
+    ...x.result(),
+    revision,
+  }));
+  await x.session.check(lessons[1]);
+  expect(x.adapters[0].wait).toHaveBeenCalledTimes(2); // initial ready + one check
+  expect(x.grade.mock.calls[0][2]).toBe(x.state.revision);
+  expect(x.passed).toHaveBeenCalledOnce();
+  x.session.dispose();
+});
+
+for (const phase of ["actions", "commit"] as const)
+  test(`${phase} 等待中连点检查不会建立多个任务，新编辑可以立即取消`, async () => {
+    const x = setup();
+    await x.open();
+    const pending = deferred<any>();
+    if (phase === "actions") {
+      x.adapters[0].fillDown = () => pending.promise;
+      void x.session.fill("main", "D2:D4");
+    } else x.adapters[0].commit = vi.fn(() => pending.promise);
+    const first = x.session.check(lessons[1]);
+    await x.session.check(lessons[1]);
+    if (phase === "commit") expect(x.adapters[0].commit).toHaveBeenCalledOnce();
+    x.editing();
+    await first;
+    pending.resolve(true);
+    expect(x.grade).not.toHaveBeenCalled();
+    expect(x.passed).not.toHaveBeenCalled();
+    x.session.dispose();
+  });
+
+test("判题期间只有未提交输入变化也会取消旧结果", async () => {
+  const x = setup();
+  await x.open();
+  const pending = deferred<GradeResult>();
+  x.grade.mockReturnValue(pending.promise);
+  const checking = x.session.check(lessons[1]);
+  await vi.waitFor(() => expect(x.grade).toHaveBeenCalledOnce());
+  const revision = x.state.revision;
+  x.editing();
+  pending.resolve(x.result());
+  await checking;
+  expect(x.state.revision).toBe(revision);
+  expect(x.passed).not.toHaveBeenCalled();
+  x.session.dispose();
+});
+
+test("提交接口区分未就绪、被阻止、失败、成功和关闭取消", async () => {
+  const x = setup();
+  expect((await x.session.commit()).status).toBe("unavailable");
+  await x.open();
+  x.adapters[0].commit = vi.fn().mockResolvedValue(false);
+  expect((await x.session.commit()).status).toBe("unsubmitted");
+  x.adapters[0].commit = vi.fn().mockRejectedValue(Error("无法提交"));
+  expect((await x.session.commit()).status).toBe("failed");
+  expect(x.state.error).toBe("无法提交");
+  x.adapters[0].commit = vi.fn().mockResolvedValue(true);
+  expect((await x.session.commit()).status).toBe("success");
+  x.session.dispose();
+  expect((await x.session.commit()).status).toBe("cancelled");
+});
+
+test("输入法未确认的提交失败保留输入，不判题", async () => {
+  const x = setup();
+  await x.open();
+  x.editing(true, "选字中");
+  x.adapters[0].commit = vi.fn().mockRejectedValue(Error("输入法还在选字"));
+  expect((await x.session.commit()).status).toBe("unsubmitted");
+  await x.session.check(lessons[1]);
+  expect(x.state.editor?.active).toBe(true);
+  expect(x.state.error).toContain("还在选字");
+  expect(x.passed).not.toHaveBeenCalled();
+  expect(x.state.committing).toBe(false);
+  x.session.dispose();
+});
+
+test("离开前提交等待期间有新输入时，不允许导航使用旧快照", async () => {
+  const x = setup();
+  await x.open();
+  const wait = deferred<void>();
+  x.adapters[0].wait.mockReturnValueOnce(wait.promise);
+  const committing = x.session.commit();
+  await vi.waitFor(() => expect(x.adapters[0].wait).toHaveBeenCalledTimes(2));
+  x.editing();
+  wait.resolve();
+  expect((await committing).status).toBe("cancelled");
+  x.session.dispose();
+});
+
+test("切关后迟到的提交不会清除新工作簿的提交状态", async () => {
+  const x = setup();
+  await x.open();
+  const old = deferred<boolean>(),
+    current = deferred<boolean>();
+  x.adapters[0].commit = () => old.promise;
+  const first = x.session.commit();
+  await x.open();
+  x.adapters[1].commit = () => current.promise;
+  const second = x.session.commit();
+  old.resolve(true);
+  expect((await first).status).toBe("cancelled");
+  expect(x.state.committing).toBe(true);
+  current.resolve(true);
+  expect((await second).status).toBe("success");
+  expect(x.state.committing).toBe(false);
+  x.session.dispose();
+});
+
+test("新输入之后迟到的提交异常不能覆盖当前编辑状态", async () => {
+  const x = setup();
+  await x.open();
+  const pending = deferred<boolean>();
+  x.adapters[0].commit = () => pending.promise;
+  const committing = x.session.commit();
+  x.editing(true, "=0");
+  pending.reject(Error("旧提交失败"));
+  expect((await committing).status).toBe("cancelled");
+  expect(x.state.error).toBe("");
+  expect(x.state.editor?.text).toBe("=0");
   x.session.dispose();
 });

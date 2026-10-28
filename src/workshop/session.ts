@@ -7,6 +7,19 @@ import { gradeOperation } from "../operations";
 
 export type Phase =
   "preparing" | "editing" | "waiting" | "grading" | "feedback" | "error";
+export type CommitResult =
+  | { status: "success" }
+  | {
+      status: "unsubmitted" | "unavailable" | "cancelled" | "failed";
+      message: string;
+    };
+interface CheckAttempt {
+  controller: AbortController;
+  adapter: SessionAdapter;
+  inputRevision: number;
+  settled: boolean;
+  revision?: number;
+}
 export interface SessionState {
   phase: Phase;
   ready: boolean;
@@ -96,7 +109,12 @@ export function bounded<T>(
 export class TeachingSession {
   private adapter?: SessionAdapter;
   private init?: AbortController;
-  private checkRun?: AbortController;
+  private checkRun?: CheckAttempt;
+  private inputRevision = 0;
+  private pendingCommit?: {
+    adapter: SessionAdapter;
+    promise: Promise<CommitResult>;
+  };
   private disposed = false;
   private actions = new Set<Promise<boolean>>();
   constructor(
@@ -104,16 +122,20 @@ export class TeachingSession {
     private deps: SessionDependencies,
   ) {}
   private cancelCheck() {
-    this.checkRun?.abort();
+    this.checkRun?.controller.abort();
     this.checkRun = undefined;
+    if (this.state.phase === "waiting" || this.state.phase === "grading")
+      this.state.phase = "editing";
   }
   changed = () => {
     if (!this.state.ready || this.disposed) return;
-    this.cancelCheck();
+    // Pending fill and this attempt's commit may emit ordinary mutations.
+    // Keep tracking their revisions; once calculation starts, any mutation cancels.
+    if (this.checkRun?.settled) this.cancelCheck();
     this.state.revision++;
     this.state.result = undefined;
     this.state.error = "";
-    this.state.phase = "editing";
+    if (!this.checkRun) this.state.phase = "editing";
     this.deps.changed();
   };
   async prepare(snapshot: WorkbookSnapshot, sheet: string, cell: string) {
@@ -125,6 +147,8 @@ export class TeachingSession {
     const run = new AbortController();
     this.init = run;
     this.state.ready = false;
+    this.inputRevision++;
+    this.pendingCommit = undefined;
     this.state.committing = false;
     this.state.editor = undefined;
     this.state.phase = "preparing";
@@ -152,6 +176,7 @@ export class TeachingSession {
           if (run.signal.aborted || this.disposed) return;
           this.state.editor = editor;
           if (editor.active) {
+            this.inputRevision++;
             this.cancelCheck();
             this.state.result = undefined;
             this.state.error = "";
@@ -177,29 +202,66 @@ export class TeachingSession {
       }
     }
   }
+  private currentCheck(attempt: CheckAttempt) {
+    return (
+      this.checkRun === attempt &&
+      !attempt.controller.signal.aborted &&
+      !this.disposed &&
+      this.adapter === attempt.adapter &&
+      this.inputRevision === attempt.inputRevision
+    );
+  }
+  private settledCheck(attempt: CheckAttempt) {
+    return (
+      this.currentCheck(attempt) &&
+      !this.state.editor?.active &&
+      attempt.revision === this.state.revision
+    );
+  }
   async check(lesson: CalculationTask) {
     if (!this.state.ready || this.checkRun || this.disposed || !this.adapter)
       return;
-    const a0 = this.adapter;
-    if (
-      this.actions.size &&
-      !(await Promise.all([...this.actions])).every(Boolean)
-    )
-      return;
-    if (this.disposed || a0 !== this.adapter || this.checkRun) return;
-    if (a0.commit && !(await this.commit())) return;
-    if (this.disposed || a0 !== this.adapter || this.checkRun) return;
     const started = performance.now();
-    const a = this.adapter,
-      run = new AbortController(),
-      revision = this.state.revision;
-    this.checkRun = run;
+    const a = this.adapter;
+    const attempt: CheckAttempt = {
+      controller: new AbortController(),
+      adapter: a,
+      inputRevision: this.inputRevision,
+      settled: false,
+    };
+    // Reserve before the first await, including pending operations and editor commit.
+    this.checkRun = attempt;
+    const signal = attempt.controller.signal;
     this.state.phase = "waiting";
     this.state.error = "";
     this.state.result = undefined;
     try {
-      await bounded(a.wait(), run.signal, this.deps.waitTimeout ?? 12000);
-      if (run.signal.aborted) return;
+      if (
+        this.actions.size &&
+        !(
+          await bounded(
+            Promise.all([...this.actions]),
+            signal,
+            this.deps.waitTimeout ?? 12000,
+          )
+        ).every(Boolean)
+      )
+        return;
+      if (!this.currentCheck(attempt)) return;
+      if (a.commit) {
+        const outcome = await bounded(
+          this.submitEditing(a),
+          signal,
+          this.deps.waitTimeout ?? 12000,
+        );
+        if (outcome.status !== "success") return;
+      }
+      if (!this.currentCheck(attempt) || this.state.editor?.active) return;
+      const revision = this.state.revision;
+      attempt.revision = revision;
+      attempt.settled = true;
+      await bounded(a.wait(), signal, this.deps.waitTimeout ?? 12000);
+      if (!this.settledCheck(attempt)) return;
       this.state.phase = "grading";
       const result = lesson.operation
         ? gradeOperation(
@@ -209,16 +271,11 @@ export class TeachingSession {
             lesson.sheets,
           )
         : await bounded(
-            this.deps.grade(lesson, a.snapshot(), revision, run.signal),
-            run.signal,
+            this.deps.grade(lesson, a.snapshot(), revision, signal),
+            signal,
             this.deps.gradeTimeout ?? 20000,
           );
-      if (
-        run.signal.aborted ||
-        this.disposed ||
-        revision !== this.state.revision
-      )
-        return;
+      if (!this.settledCheck(attempt)) return;
       if (result.revision !== revision)
         throw Error("检查结果已过期，请重新检查最新作答。");
       measured("check", started);
@@ -226,7 +283,7 @@ export class TeachingSession {
       this.state.phase = result.status === "error" ? "error" : "feedback";
       if (result.status === "passed") this.deps.passed(result);
     } catch (e) {
-      if (!run.signal.aborted && !this.disposed) {
+      if (this.currentCheck(attempt)) {
         this.state.phase = "error";
         this.state.error =
           e instanceof Error
@@ -234,31 +291,127 @@ export class TeachingSession {
             : "检查未完成，作答已保留。请重新检查。";
       }
     } finally {
-      run.abort();
-      if (this.checkRun === run) this.checkRun = undefined;
+      attempt.controller.abort();
+      if (this.checkRun === attempt) {
+        this.checkRun = undefined;
+        if (this.state.phase === "waiting" || this.state.phase === "grading")
+          this.state.phase = "editing";
+      }
     }
   }
-  async commit(): Promise<boolean> {
-    if (!this.state.ready || !this.adapter || this.disposed) return false;
-    const a = this.adapter;
-    if (
-      this.actions.size &&
-      !(await Promise.all([...this.actions])).every(Boolean)
-    )
-      return false;
-    if (this.disposed || a !== this.adapter) return false;
+  /** Only submit the editor. Callers own the calculation wait and its cancellation. */
+  private submitEditing(a: SessionAdapter): Promise<CommitResult> {
+    if (this.pendingCommit?.adapter === a) return this.pendingCommit.promise;
+    const inputRevision = this.inputRevision;
+    const pending = {
+      adapter: a,
+      promise: undefined as unknown as Promise<CommitResult>,
+    };
+    this.pendingCommit = pending;
     this.state.committing = true;
-    try {
-      const accepted = a.commit ? await a.commit() : true;
-      if (accepted && !this.disposed && a === this.adapter) await a.wait();
-      return accepted && !this.disposed && a === this.adapter;
-    } catch (e) {
-      if (a === this.adapter && !this.disposed)
-        this.state.error =
+    pending.promise = (async (): Promise<CommitResult> => {
+      try {
+        const accepted = a.commit ? await a.commit() : true;
+        if (this.disposed || a !== this.adapter)
+          return { status: "cancelled", message: "工作簿已切换。" };
+        if (!accepted) {
+          const message = "输入尚未写入，请按单元格旁的提示继续修改。";
+          this.state.error = message;
+          return { status: "unsubmitted", message };
+        }
+        if (inputRevision !== this.inputRevision)
+          return { status: "cancelled", message: "输入已有变化，请重新确认。" };
+        if (this.state.editor?.active)
+          return {
+            status: "unsubmitted",
+            message: "输入尚未确认，请继续修改。",
+          };
+        this.state.error = "";
+        return { status: "success" };
+      } catch (e) {
+        if (
+          this.disposed ||
+          a !== this.adapter ||
+          inputRevision !== this.inputRevision
+        )
+          return { status: "cancelled", message: "输入或工作簿已有变化。" };
+        const message =
           e instanceof Error ? e.message : "输入尚未写入，请继续修改。";
-      return false;
-    } finally {
-      if (!this.disposed && a === this.adapter) this.state.committing = false;
+        this.state.error = message;
+        return {
+          status: this.state.editor?.active ? "unsubmitted" : "failed",
+          message,
+        };
+      } finally {
+        if (this.pendingCommit === pending) {
+          this.pendingCommit = undefined;
+          this.state.committing = false;
+        }
+      }
+    })();
+    return pending.promise;
+  }
+  async commit(): Promise<CommitResult> {
+    if (this.disposed)
+      return { status: "cancelled", message: "工作簿已关闭。" };
+    if (!this.state.ready || !this.adapter)
+      return { status: "unavailable", message: "工作簿尚未准备好。" };
+    const a = this.adapter,
+      inputRevision = this.inputRevision;
+    const signal = this.init!.signal;
+    try {
+      if (
+        this.actions.size &&
+        !(
+          await bounded(
+            Promise.all([...this.actions]),
+            signal,
+            this.deps.waitTimeout ?? 12000,
+          )
+        ).every(Boolean)
+      )
+        return {
+          status: "failed",
+          message: this.state.error || "上一次操作未完成。",
+        };
+      if (
+        this.disposed ||
+        a !== this.adapter ||
+        inputRevision !== this.inputRevision
+      )
+        return {
+          status: "cancelled",
+          message: "输入或工作簿已有变化，请重新确认。",
+        };
+      const outcome = await bounded(
+        this.submitEditing(a),
+        signal,
+        this.deps.waitTimeout ?? 12000,
+      );
+      if (outcome.status !== "success") return outcome;
+      const revision = this.state.revision;
+      await bounded(a.wait(), signal, this.deps.waitTimeout ?? 12000);
+      if (
+        this.disposed ||
+        a !== this.adapter ||
+        inputRevision !== this.inputRevision ||
+        revision !== this.state.revision ||
+        this.state.editor?.active
+      )
+        return { status: "cancelled", message: "作答已有变化，请重新确认。" };
+      return { status: "success" };
+    } catch (e) {
+      if (
+        signal.aborted ||
+        this.disposed ||
+        a !== this.adapter ||
+        inputRevision !== this.inputRevision
+      )
+        return { status: "cancelled", message: "输入或工作簿已有变化。" };
+      const message =
+        e instanceof Error ? e.message : "输入尚未写入，请继续修改。";
+      this.state.error = message;
+      return { status: "failed", message };
     }
   }
   resolveInput(action: "equals" | "text" | "edit", revision: number) {
@@ -268,7 +421,7 @@ export class TeachingSession {
     return this.adapter?.snapshot();
   }
   focus(sheet: string, cell: string) {
-    this.act(() => this.adapter?.focus(sheet, cell));
+    this.act(() => this.adapter?.focus(sheet, cell), false);
   }
   write(
     sheet = this.state.sheet,
@@ -300,7 +453,8 @@ export class TeachingSession {
       if (adapter === this.adapter) this.changed();
     });
   }
-  private act(action: () => unknown) {
+  private act(action: () => unknown, invalidates = true) {
+    if (invalidates) this.cancelCheck();
     const task = this.perform(action);
     this.actions.add(task);
     void task.finally(() => this.actions.delete(task));
