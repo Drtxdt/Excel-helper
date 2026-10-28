@@ -1,5 +1,5 @@
 import { formulaInput } from "./native-editor";
-import { readFile } from "node:fs/promises";
+import { readFile, open } from "node:fs/promises";
 import {
   test,
   expect,
@@ -72,6 +72,59 @@ test("真实导出、跨浏览器上下文导入、损坏文件隔离及导入�
       buffer: Buffer.from("{broken"),
     });
     await expect(restored.getByRole("status")).toContainText("没有导入");
+    await expect(
+      restored.locator('.record-list a[href="#/lesson/02"]'),
+    ).toContainText("已完成");
+
+    const oversized = structuredClone(payload);
+    oversized.records[0].draft.sheets.main.rowCount = 2001;
+    await restored.locator("input[type=file]").setInputFiles({
+      name: "too-many-rows.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(oversized)),
+    });
+    await expect(restored.getByRole("status")).toContainText("2,000");
+    await expect(restored.getByRole("status")).toContainText("没有导入");
+    await expect(
+      restored.locator('.record-list a[href="#/lesson/02"]'),
+    ).toContainText("已完成");
+    // Playwright limits in-memory file buffers to 50 MiB; use a real file.
+    const largePath = testInfo.outputPath("too-many-bytes.json");
+    const largeFile = await open(largePath, "w");
+    try {
+      await largeFile.truncate(60_000_001);
+    } finally {
+      await largeFile.close();
+    }
+    await restored.locator("input[type=file]").setInputFiles(largePath);
+    await expect(restored.getByRole("status")).toContainText("60,000,000 字节");
+    await expect(
+      restored.locator('.record-list a[href="#/lesson/02"]'),
+    ).toContainText("已完成");
+
+    await restored.screenshot({
+      path: testInfo.outputPath("backup-limit-feedback.png"),
+      fullPage: true,
+    });
+    // Simulate slow disk reads, without changing application import/state APIs.
+    await restored.evaluate(() => {
+      const read = Blob.prototype.arrayBuffer;
+      Blob.prototype.arrayBuffer = async function () {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        return read.call(this);
+      };
+    });
+    await restored.locator("input[type=file]").setInputFiles({
+      name: "slow-valid-backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({ ...payload, records: [] }) + " ".repeat(2_000_000),
+      ),
+    });
+    await restored
+      .getByRole("button", { name: "取消读取", exact: true })
+      .click();
+    await expect(restored.getByRole("status")).toContainText("已取消读取");
     await expect(
       restored.locator('.record-list a[href="#/lesson/02"]'),
     ).toContainText("已完成");
